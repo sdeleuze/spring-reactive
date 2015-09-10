@@ -26,7 +26,9 @@ dependencies {
 	compile "commons-logging:commons-logging:1.2"
 	compile "com.fasterxml.jackson.core:jackson-databind:2.6.1"
 
-	optional "io.reactivex:rxnetty:0.5.0-SNAPSHOT"
+	optional "io.netty:netty-codec-http:4.1.0.Beta6"
+	optional "io.netty:netty-handler:4.1.0.Beta6"
+	optional "io.netty:netty-transport-native-epoll:4.1.0.Beta6"
 	optional "io.reactivex:rxjava-reactive-streams:1.0.1"
 
 	provided "javax.servlet:javax.servlet-api:3.1.0"

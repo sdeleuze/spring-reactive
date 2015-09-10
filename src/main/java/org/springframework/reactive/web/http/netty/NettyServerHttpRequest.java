@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.reactive.web.http.rxnetty;
+package org.springframework.reactive.web.http.netty;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 import io.netty.buffer.ByteBuf;
-import io.reactivex.netty.protocol.http.server.HttpServerRequest;
+import io.netty.handler.codec.http.HttpRequest;
 import org.reactivestreams.Publisher;
-import rx.Observable;
+import reactor.rx.Stream;
+import reactor.rx.Streams;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -31,16 +33,19 @@ import org.springframework.util.Assert;
 /**
  * @author Rossen Stoyanchev
  */
-public class RxNettyServerHttpRequest implements ServerHttpRequest {
+public class NettyServerHttpRequest implements ServerHttpRequest {
 
-	private final HttpServerRequest<ByteBuf> request;
+	private final HttpRequest request;
+
+	private final Stream<ByteBuf> content;
 
 	private HttpHeaders headers;
 
 
-	public RxNettyServerHttpRequest(HttpServerRequest<ByteBuf> request) {
+	public NettyServerHttpRequest(HttpRequest request, Publisher<ByteBuf> content) {
 		Assert.notNull("'request', request must not be null.");
 		this.request = request;
+		this.content = Streams.wrap(content);
 	}
 
 
@@ -48,10 +53,8 @@ public class RxNettyServerHttpRequest implements ServerHttpRequest {
 	public HttpHeaders getHeaders() {
 		if (this.headers == null) {
 			this.headers = new HttpHeaders();
-			for (String name : this.request.getHeaderNames()) {
-				for (String value : this.request.getAllHeaderValues(name)) {
-					this.headers.add(name, value);
-				}
+			for (Map.Entry<String, String> header : this.request.headers()) {
+				this.headers.add(header.getKey(), header.getValue());
 			}
 		}
 		return this.headers;
@@ -59,13 +62,13 @@ public class RxNettyServerHttpRequest implements ServerHttpRequest {
 
 	@Override
 	public HttpMethod getMethod() {
-		return HttpMethod.valueOf(this.request.getHttpMethod().name());
+		return HttpMethod.valueOf(this.request.method().name());
 	}
 
 	@Override
 	public URI getURI() {
 		try {
-			return new URI(this.request.getUri());
+			return new URI(this.request.uri());
 		}
 		catch (URISyntaxException ex) {
 			throw new IllegalStateException("Could not get URI: " + ex.getMessage(), ex);
@@ -75,12 +78,11 @@ public class RxNettyServerHttpRequest implements ServerHttpRequest {
 
 	@Override
 	public Publisher<byte[]> getBody() {
-		Observable<byte[]> bytesContent = this.request.getContent().map(byteBuf -> {
+		return this.content.map(byteBuf -> {
 			byte[] copy = new byte[byteBuf.readableBytes()];
 			byteBuf.readBytes(copy);
 			return copy;
 		});
-		return rx.RxReactiveStreams.toPublisher(bytesContent);
 	}
 
 }
