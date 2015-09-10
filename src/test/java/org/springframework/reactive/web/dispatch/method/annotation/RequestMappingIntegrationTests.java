@@ -167,6 +167,42 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 		assertEquals("Marie", results.get(1).getName());
 	}
 
+	@Test
+	public void capitalizeWithObservable() throws Exception {
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI("http://localhost:" + port + "/capitalize-observable");
+		List<Person> persons = Arrays.asList(new Person("Robert"), new Person("Marie"));
+		RequestEntity<List<Person>> request = RequestEntity
+				.post(url)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.body(persons);
+		List<Person> results = restTemplate.exchange(request, new ParameterizedTypeReference<List<Person>>(){}).getBody();
+
+		assertEquals(2, results.size());
+		assertEquals("ROBERT", results.get(0).getName());
+		assertEquals("MARIE", results.get(1).getName());
+	}
+
+	@Test
+	public void capitalizeWithStream() throws Exception {
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI("http://localhost:" + port + "/capitalize-stream");
+		List<Person> persons = Arrays.asList(new Person("Robert"), new Person("Marie"));
+		RequestEntity<List<Person>> request = RequestEntity
+				.post(url)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.body(persons);
+		List<Person> results = restTemplate.exchange(request, new ParameterizedTypeReference<List<Person>>(){}).getBody();
+
+		assertEquals(2, results.size());
+		assertEquals("ROBERT", results.get(0).getName());
+		assertEquals("MARIE", results.get(1).getName());
+	}
+
 
 	@Controller
 	@SuppressWarnings("unused")
@@ -212,6 +248,24 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 		@ResponseBody
 		public Publisher<Person> echo(@RequestBody Publisher<Person> persons) {
 			return persons;
+		}
+
+		@RequestMapping("/capitalize-observable")
+		@ResponseBody
+		public Observable<Person> capitalizeWithObservable(@RequestBody Observable<Person> persons) {
+			return persons.map(person -> {
+				person.setName(person.getName().toUpperCase());
+				return person;
+			});
+		}
+
+		@RequestMapping("/capitalize-stream")
+		@ResponseBody
+		public Stream<Person> capitalizeWithStream(@RequestBody Stream<Person> persons) {
+			return persons.map(person -> {
+				person.setName(person.getName().toUpperCase());
+				return person;
+			});
 		}
 
 	}
