@@ -167,6 +167,11 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 		assertEquals("MARIE", results.get(1).getName());
 	}
 
+	@Test
+	public void capitalizeBis() throws Exception {
+		capitalize();
+	}
+
 
 	@Controller
 	@SuppressWarnings("unused")
