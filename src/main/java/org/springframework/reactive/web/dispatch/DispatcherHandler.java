@@ -18,11 +18,10 @@ package org.springframework.reactive.web.dispatch;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
-import reactor.rx.Streams;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactoryUtils;
@@ -77,7 +76,7 @@ public class DispatcherHandler implements HttpHandler, ApplicationContextAware {
 
 
 	@Override
-	public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
+	public CompletableFuture<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Processing " + request.getMethod() + " request for [" + request.getURI() + "]");
@@ -87,20 +86,21 @@ public class DispatcherHandler implements HttpHandler, ApplicationContextAware {
 		if (handler == null) {
 			// No exception handling mechanism yet
 			response.setStatusCode(HttpStatus.NOT_FOUND);
-			return Streams.empty();
+			return CompletableFuture.completedFuture(null);
 		}
 
 		HandlerAdapter handlerAdapter = getHandlerAdapter(handler);
-		Publisher<HandlerResult> resultPublisher = handlerAdapter.handle(request, response, handler);
+		CompletableFuture<HandlerResult> handling = handlerAdapter.handle(request, response, handler);
 
-		return Streams.wrap(resultPublisher).concatMap((HandlerResult result) -> {
+		return handling.thenCompose((HandlerResult result) -> {
 			for (HandlerResultHandler resultHandler : resultHandlers) {
 				if (resultHandler.supports(result)) {
 					return resultHandler.handleResult(request, response, result);
 				}
 			}
-			return Streams.fail(new IllegalStateException(
-					"No HandlerResultHandler for " + result.getValue()));
+			CompletableFuture<Void> exceptionFuture = new CompletableFuture<>();
+			exceptionFuture.completeExceptionally(new IllegalStateException("No HandlerResultHandler for " + result.getValue()));
+			return exceptionFuture;
 		});
 	}
 

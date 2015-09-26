@@ -25,7 +25,6 @@ import java.util.concurrent.CompletableFuture;
 
 import org.reactivestreams.Publisher;
 import reactor.rx.Promise;
-import reactor.rx.Stream;
 import reactor.rx.Streams;
 import rx.Observable;
 import rx.RxReactiveStreams;
@@ -93,7 +92,7 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 	}
 
 	@Override
-	public Publisher<Void> handleResult(ServerHttpRequest request, ServerHttpResponse response,
+	public CompletableFuture<Void> handleResult(ServerHttpRequest request, ServerHttpResponse response,
 			HandlerResult result) {
 
 		Object value = result.getValue();
@@ -101,7 +100,7 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 		MethodParameter returnType = handlerMethod.getReturnValueType(value);
 
 		if (value == null) {
-			return Streams.empty();
+			return CompletableFuture.completedFuture(null);
 		}
 
 		MediaType mediaType = resolveMediaType(request);
@@ -140,8 +139,9 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 			response.getHeaders().setContentType(mediaType);
 			return response.writeWith(Streams.wrap(outputStream));
 		}
-		return Streams.fail(new IllegalStateException(
-				"Return value type not supported: " + returnType));
+		CompletableFuture<Void> exceptionFuture = new CompletableFuture<>();
+		exceptionFuture.completeExceptionally(new IllegalStateException("Return value type not supported: " + returnType));
+		return exceptionFuture;
 	}
 
 	private MediaType resolveMediaType(ServerHttpRequest request) {

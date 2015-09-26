@@ -15,8 +15,7 @@
  */
 package org.springframework.reactive.web.dispatch.handler;
 
-import org.reactivestreams.Publisher;
-import reactor.rx.Streams;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.reactive.web.dispatch.HandlerAdapter;
 import org.springframework.reactive.web.dispatch.HandlerResult;
@@ -44,10 +43,10 @@ public class HttpHandlerAdapter implements HandlerAdapter {
 	}
 
 	@Override
-	public Publisher<HandlerResult> handle(ServerHttpRequest request, ServerHttpResponse response, Object handler) {
+	public CompletableFuture<HandlerResult> handle(ServerHttpRequest request, ServerHttpResponse response, Object handler) {
 		HttpHandler httpHandler = (HttpHandler) handler;
-		Publisher<Void> publisher = httpHandler.handle(request, response);
-		return Streams.wrap(publisher).map(aVoid -> null);
+		CompletableFuture<Void> handling = httpHandler.handle(request, response);
+		return handling.thenApply(aVoid -> null);
 	}
 
 }

@@ -16,7 +16,7 @@
 
 package org.springframework.reactive.web.http;
 
-import org.reactivestreams.Publisher;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Arjen Poutsma
@@ -24,7 +24,7 @@ import org.reactivestreams.Publisher;
 public class EchoHandler implements HttpHandler {
 
 	@Override
-	public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
+	public CompletableFuture<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 		return response.writeWith(request.getBody());
 	}
 }

@@ -18,10 +18,10 @@ package org.springframework.reactive.web.http;
 
 import java.nio.ByteBuffer;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.io.buffer.Buffer;
@@ -41,7 +41,7 @@ public class RandomHandler implements HttpHandler {
 	private final Random rnd = new Random();
 
 	@Override
-	public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
+	public CompletableFuture<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 
 		request.getBody().subscribe(new Subscriber<ByteBuffer>() {
 			private Subscription s;

@@ -19,9 +19,9 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.junit.Test;
-import org.reactivestreams.Publisher;
 import reactor.io.buffer.Buffer;
 import reactor.rx.Streams;
 
@@ -97,7 +97,7 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 	private static class FooHandler implements HttpHandler {
 
 		@Override
-		public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
+		public CompletableFuture<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 			return response.writeWith(Streams.just(Buffer.wrap("foo").byteBuffer()));
 		}
 	}
@@ -105,7 +105,7 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 	private static class BarHandler implements HttpHandler {
 
 		@Override
-		public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
+		public CompletableFuture<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 			return response.writeWith(Streams.just(Buffer.wrap("bar").byteBuffer()));
 		}
 	}

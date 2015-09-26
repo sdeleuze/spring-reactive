@@ -15,7 +15,7 @@
  */
 package org.springframework.reactive.web.dispatch;
 
-import org.reactivestreams.Publisher;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.reactive.web.http.ServerHttpRequest;
 import org.springframework.reactive.web.http.ServerHttpResponse;
@@ -27,6 +27,6 @@ public interface HandlerAdapter {
 
 	boolean supports(Object handler);
 
-	Publisher<HandlerResult> handle(ServerHttpRequest request, ServerHttpResponse response, Object handler);
+	CompletableFuture<HandlerResult> handle(ServerHttpRequest request, ServerHttpResponse response, Object handler);
 
 }

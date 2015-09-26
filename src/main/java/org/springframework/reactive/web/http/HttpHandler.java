@@ -16,15 +16,27 @@
 
 package org.springframework.reactive.web.http;
 
-import org.reactivestreams.Publisher;
+import java.util.concurrent.CompletableFuture;
 
 
 /**
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
+ * @author Sebastien Deleuze
  */
 public interface HttpHandler {
 
-	Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response);
+	/**
+	 * Process the given HTTP request, generating a response.
+	 *
+	 * <p>Implementations should not throw exception but rather returns a future that
+	 * completes exceptionally.
+	 *
+	 * @param request current HTTP request
+	 * @param response current HTTP response
+	 * @return a {@link CompletableFuture} that completes (as a success or an Exception
+	 * when the request processing is finished.
+	 */
+	CompletableFuture<Void> handle(ServerHttpRequest request, ServerHttpResponse response);
 
 }

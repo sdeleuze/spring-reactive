@@ -18,9 +18,7 @@ package org.springframework.reactive.web.dispatch.method.annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.reactivestreams.Publisher;
-import reactor.rx.Streams;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.reactive.codec.decoder.JacksonJsonDecoder;
@@ -64,7 +62,7 @@ public class RequestMappingHandlerAdapter implements HandlerAdapter, Initializin
 	}
 
 	@Override
-	public Publisher<HandlerResult> handle(ServerHttpRequest request, ServerHttpResponse response,
+	public CompletableFuture<HandlerResult> handle(ServerHttpRequest request, ServerHttpResponse response,
 			Object handler) {
 
 		final InvocableHandlerMethod invocable = new InvocableHandlerMethod((HandlerMethod) handler);
@@ -75,10 +73,12 @@ public class RequestMappingHandlerAdapter implements HandlerAdapter, Initializin
 			result = invocable.invokeForRequest(request);
 		}
 		catch (Exception ex) {
-			return Streams.fail(ex);
+			CompletableFuture<HandlerResult> exceptionFuture = new CompletableFuture<>();
+			exceptionFuture.completeExceptionally(ex);
+			return exceptionFuture;
 		}
 
-		return Streams.just(new HandlerResult(invocable, result));
+		return CompletableFuture.completedFuture(new HandlerResult(invocable, result));
 	}
 
 }

@@ -27,6 +27,8 @@ import reactor.core.support.Exceptions;
 import reactor.rx.Stream;
 import reactor.rx.action.Action;
 import reactor.rx.subscription.ReactiveSubscription;
+import rx.Observable;
+import rx.Single;
 
 import org.springframework.util.Assert;
 
@@ -95,6 +97,30 @@ public class CompletableFutureUtils {
 		});
 		return future;
 	}
+
+	public static <T> Observable<T> toObservable(CompletableFuture<T> future) {
+		return Observable.create(subscriber -> future.whenComplete((result, error) -> {
+			if (error != null) {
+				subscriber.onError(error);
+			} else {
+				subscriber.onNext(result);
+				subscriber.onCompleted();
+			}
+		}));
+	}
+
+	public static <T> CompletableFuture<T> fromSingle(Single<T> single) {
+		final CompletableFuture<T> future = new CompletableFuture<>();
+		single.subscribe(future::complete, future::completeExceptionally);
+		return future;
+	}
+
+	public static <T> CompletableFuture<List<T>> fromObservable(Observable<T> observable) {
+		final CompletableFuture<List<T>> future = new CompletableFuture<>();
+		observable.doOnError(future::completeExceptionally).toList().forEach(future::complete);
+		return future;
+	}
+
 
 	private static class CompletableFutureStream<T> extends Stream<T> {
 

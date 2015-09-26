@@ -16,6 +16,7 @@
 package org.springframework.reactive.web.http.rxnetty;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
@@ -23,9 +24,11 @@ import org.reactivestreams.Publisher;
 import reactor.io.buffer.Buffer;
 import rx.Observable;
 import rx.RxReactiveStreams;
+import rx.Single;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.reactive.util.CompletableFutureUtils;
 import org.springframework.reactive.web.http.ServerHttpResponse;
 import org.springframework.util.Assert;
 
@@ -59,10 +62,11 @@ public class RxNettyServerHttpResponse implements ServerHttpResponse {
 	}
 
 	@Override
-	public Publisher<Void> writeWith(Publisher<ByteBuffer> contentPublisher) {
+	public CompletableFuture<Void> writeWith(Publisher<ByteBuffer> contentPublisher) {
 		writeHeaders();
 		Observable<byte[]> contentObservable = RxReactiveStreams.toObservable(contentPublisher).map(content -> new Buffer(content).asBytes());
-		return RxReactiveStreams.toPublisher(this.response.writeBytes(contentObservable));
+		Single<Void> handling = this.response.writeBytes(contentObservable).toSingle();
+		return CompletableFutureUtils.fromSingle(handling);
 	}
 
 	private void writeHeaders() {

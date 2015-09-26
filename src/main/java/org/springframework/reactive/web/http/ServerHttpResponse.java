@@ -16,6 +16,7 @@
 package org.springframework.reactive.web.http;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
 
 import org.reactivestreams.Publisher;
 
@@ -28,6 +29,6 @@ public interface ServerHttpResponse extends HttpMessage {
 
 	void setStatusCode(HttpStatus status);
 
-	Publisher<Void> writeWith(Publisher<ByteBuffer> contentPublisher);
+	CompletableFuture<Void> writeWith(Publisher<ByteBuffer> contentPublisher);
 
 }

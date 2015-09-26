@@ -18,6 +18,7 @@ package org.springframework.reactive.web.http.servlet;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -25,6 +26,7 @@ import org.reactivestreams.Publisher;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.reactive.util.CompletableFutureUtils;
 import org.springframework.reactive.web.http.ServerHttpResponse;
 import org.springframework.util.Assert;
 
@@ -62,9 +64,9 @@ public class ServletServerHttpResponse implements ServerHttpResponse {
 	}
 
 	@Override
-	public Publisher<Void> writeWith(final Publisher<ByteBuffer> contentPublisher) {
+	public CompletableFuture<Void> writeWith(final Publisher<ByteBuffer> contentPublisher) {
 		writeHeaders();
-		return (s -> contentPublisher.subscribe(responseSubscriber));
+		return CompletableFutureUtils.fromPublisher(s -> contentPublisher.subscribe(responseSubscriber)).thenApply(aVoid -> null);
 	}
 
 	private void writeHeaders() {

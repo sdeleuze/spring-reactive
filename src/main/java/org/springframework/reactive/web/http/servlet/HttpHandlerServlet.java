@@ -17,6 +17,7 @@
 package org.springframework.reactive.web.http.servlet;
 
 import java.io.IOException;
+import java.util.function.BiConsumer;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
@@ -27,8 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.reactive.web.http.HttpHandler;
@@ -68,44 +67,33 @@ public class HttpHandlerServlet extends HttpServlet {
 		response.getOutputStream().setWriteListener(responseSubscriber);
 		ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response, responseSubscriber);
 
-		HandlerResultSubscriber resultSubscriber = new HandlerResultSubscriber(contextSynchronizer, httpResponse);
-		this.handler.handle(httpRequest, httpResponse).subscribe(resultSubscriber);
+		HandlerResultConsumer resultConsumer = new HandlerResultConsumer(contextSynchronizer, httpResponse);
+		this.handler.handle(httpRequest, httpResponse).whenComplete(resultConsumer);
 	}
 
 
-	private static class HandlerResultSubscriber implements Subscriber<Void> {
+	private static class HandlerResultConsumer implements BiConsumer<Void, Throwable> {
 
 		private final AsyncContextSynchronizer synchronizer;
 
 		private final ServletServerHttpResponse response;
 
 
-		public HandlerResultSubscriber(AsyncContextSynchronizer synchronizer, ServletServerHttpResponse response) {
+		public HandlerResultConsumer(AsyncContextSynchronizer synchronizer, ServletServerHttpResponse response) {
 			this.synchronizer = synchronizer;
 			this.response = response;
 		}
 
-
 		@Override
-		public void onSubscribe(Subscription subscription) {
-			subscription.request(Long.MAX_VALUE);
-		}
-
-		@Override
-		public void onNext(Void aVoid) {
-			// no op
-		}
-
-		@Override
-		public void onError(Throwable ex) {
-			logger.error("Error from request handling. Completing the request.", ex);
-			this.response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-			this.synchronizer.complete();
-		}
-
-		@Override
-		public void onComplete() {
-			this.synchronizer.complete();
+		public void accept(Void aVoid, Throwable ex) {
+			if (ex != null) {
+				logger.error("Error from request handling. Completing the request.", ex);
+				this.response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+				this.synchronizer.complete();
+			}
+			else {
+				this.synchronizer.complete();
+			}
 		}
 	}
 }

@@ -16,13 +16,13 @@
 
 package org.springframework.reactive.web.http;
 
+import java.util.concurrent.CompletableFuture;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
 
 import org.springframework.http.MediaType;
 import org.springframework.reactive.io.BufferOutputStream;
@@ -40,7 +40,7 @@ public class XmlHandler implements HttpHandler {
 	private static final Log logger = LogFactory.getLog(XmlHandler.class);
 
 	@Override
-	public Publisher<Void> handle(ServerHttpRequest request,
+	public CompletableFuture<Void> handle(ServerHttpRequest request,
 			ServerHttpResponse response) {
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(XmlHandlerIntegrationTests.Person.class);
