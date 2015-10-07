@@ -16,6 +16,20 @@
 
 package org.springframework.reactive.web.dispatch.method.annotation;
 
+import org.reactivestreams.Publisher;
+import org.springframework.core.MethodParameter;
+import org.springframework.core.ResolvableType;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.reactive.codec.decoder.ByteToMessageDecoder;
+import org.springframework.reactive.util.CompletableFutureUtils;
+import org.springframework.reactive.web.dispatch.method.HandlerMethodArgumentResolver;
+import org.springframework.reactive.web.dispatch.method.convert.DefaultCompositionConverter;
+import org.springframework.reactive.web.http.ServerHttpRequest;
+import org.springframework.web.bind.annotation.RequestBody;
+import reactor.Publishers;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -24,27 +38,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.reactivestreams.Publisher;
-import reactor.Publishers;
-import reactor.rx.Promise;
-import reactor.rx.Stream;
-import reactor.rx.Streams;
-import rx.Observable;
-import rx.RxReactiveStreams;
-import rx.Single;
-
-import org.springframework.core.MethodParameter;
-import org.springframework.core.ResolvableType;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.reactive.codec.decoder.ByteToMessageDecoder;
-import org.springframework.reactive.util.CompletableFutureUtils;
-import org.springframework.reactive.web.dispatch.method.HandlerMethodArgumentResolver;
-import org.springframework.reactive.web.http.ServerHttpRequest;
-import org.springframework.web.bind.annotation.RequestBody;
-
 /**
  * @author Sebastien Deleuze
+ * @author Stephane Maldini
  */
 public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -52,6 +48,7 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 
 	private final List<ByteToMessageDecoder<?>> deserializers;
 	private final List<ByteToMessageDecoder<ByteBuffer>> preProcessors;
+	private final ConversionService conversionService;
 
 
 	public RequestBodyArgumentResolver(List<ByteToMessageDecoder<?>> deserializers) {
@@ -59,7 +56,12 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 	}
 
 	public RequestBodyArgumentResolver(List<ByteToMessageDecoder<?>> deserializers, List<ByteToMessageDecoder<ByteBuffer>> preProcessors) {
+		this(deserializers, preProcessors, DefaultCompositionConverter.INSTANCE);
+	}
+
+	public RequestBodyArgumentResolver(List<ByteToMessageDecoder<?>> deserializers, List<ByteToMessageDecoder<ByteBuffer>> preProcessors, ConversionService conversionService) {
 		this.deserializers = deserializers;
+		this.conversionService = conversionService;
 		this.preProcessors = preProcessors;
 	}
 
@@ -78,9 +80,7 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 
 		// TODO: Refactor type conversion
 		ResolvableType readType = type;
-		if (Observable.class.isAssignableFrom(type.getRawClass()) ||
-				Single.class.isAssignableFrom(type.getRawClass()) ||
-				Promise.class.isAssignableFrom(type.getRawClass()) ||
+		if (conversionService.canConvert(Publisher.class, type.getRawClass()) ||
 				Publisher.class.isAssignableFrom(type.getRawClass()) ||
 				CompletableFuture.class.isAssignableFrom(type.getRawClass())) {
 			readType = type.getGeneric(0);
@@ -96,18 +96,8 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 			}
 			Publisher<?> elementStream = deserializer.decode(inputStream, readType, mediaType, UTF_8);
 
-			// TODO: Refactor type conversion
-			if (Stream.class.isAssignableFrom(type.getRawClass())) {
-				return Streams.wrap(elementStream);
-			}
-			else if (Promise.class.isAssignableFrom(type.getRawClass())) {
-				return Streams.wrap(elementStream).take(1).next();
-			}
-			else if (Observable.class.isAssignableFrom(type.getRawClass())) {
-				return RxReactiveStreams.toObservable(elementStream);
-			}
-			else if (Single.class.isAssignableFrom(type.getRawClass())) {
-				return RxReactiveStreams.toObservable(elementStream).toSingle();
+			if (conversionService.canConvert(Publisher.class, type.getRawClass())) {
+				return conversionService.convert(elementStream, type.getRawClass());
 			}
 			else if (CompletableFuture.class.isAssignableFrom(type.getRawClass())) {
 				return CompletableFutureUtils.fromSinglePublisher(elementStream);

@@ -24,6 +24,9 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
+import org.springframework.reactive.codec.decoder.JacksonJsonDecoder;
+import org.springframework.reactive.codec.decoder.JsonObjectDecoder;
+import org.springframework.reactive.codec.decoder.StringDecoder;
 import reactor.rx.Promise;
 import reactor.rx.Promises;
 import reactor.rx.Stream;
@@ -52,6 +55,7 @@ import org.springframework.web.context.support.StaticWebApplicationContext;
 /**
  * @author Rossen Stoyanchev
  * @author Sebastien Deleuze
+ * @author Stephane Maldini
  */
 public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrationTests {
 
@@ -62,7 +66,9 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 		wac.registerSingleton("handlerMapping", RequestMappingHandlerMapping.class);
 		wac.registerSingleton("handlerAdapter", RequestMappingHandlerAdapter.class);
 		wac.getDefaultListableBeanFactory().registerSingleton("responseBodyResultHandler",
-				new ResponseBodyResultHandler(Arrays.asList(new StringEncoder(), new JacksonJsonEncoder()), Arrays.asList(new JsonObjectEncoder())));
+		  new ResponseBodyResultHandler(Arrays.asList(new StringEncoder(), new JacksonJsonEncoder()), Arrays.asList
+		    (new JsonObjectEncoder())));
+
 		wac.registerSingleton("controller", TestController.class);
 		wac.refresh();
 
@@ -159,6 +165,17 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 
 		URI url = new URI(requestUrl);
 		RequestEntity<Void> request = RequestEntity.get(url).accept(MediaType.APPLICATION_JSON).build();
+		ResponseEntity<Person> response = restTemplate.exchange(request, Person.class);
+
+		assertEquals(new Person("Robert"), response.getBody());
+	}
+
+	public void postAsPojo(String requestUrl) throws Exception {
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI(requestUrl);
+		RequestEntity<Person> request = RequestEntity.post(url).accept(MediaType.APPLICATION_JSON).body(new Person
+		  ("Robert"));
 		ResponseEntity<Person> response = restTemplate.exchange(request, Person.class);
 
 		assertEquals(new Person("Robert"), response.getBody());
@@ -321,6 +338,8 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 				return person;
 			});
 		}
+
+		//TODO add mixed and T request mappings tests
 
 	}
 

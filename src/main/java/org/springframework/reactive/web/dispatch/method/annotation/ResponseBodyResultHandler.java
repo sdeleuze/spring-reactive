@@ -21,21 +21,19 @@ import org.springframework.core.Ordered;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.reactive.codec.encoder.MessageToByteEncoder;
 import org.springframework.reactive.util.CompletableFutureUtils;
 import org.springframework.reactive.web.dispatch.HandlerResult;
 import org.springframework.reactive.web.dispatch.HandlerResultHandler;
+import org.springframework.reactive.web.dispatch.method.convert.DefaultCompositionConverter;
 import org.springframework.reactive.web.http.ServerHttpRequest;
 import org.springframework.reactive.web.http.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
 import reactor.Publishers;
-import reactor.rx.Promise;
-import rx.Observable;
-import rx.RxReactiveStreams;
-import rx.Single;
 
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -50,14 +48,16 @@ import java.util.concurrent.CompletableFuture;
  * First version using {@link MessageToByteEncoder}s
  *
  * @author Rossen Stoyanchev
+ * @author Stephane Maldini
  */
 public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered {
 
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 
 
-	private final List<MessageToByteEncoder<?>> serializers;
+	private final List<MessageToByteEncoder<?>>          serializers;
 	private final List<MessageToByteEncoder<ByteBuffer>> postProcessors;
+	private final ConversionService                      conversionService;
 
 	private int order = 0;
 
@@ -66,9 +66,16 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 		this(serializers, Collections.EMPTY_LIST);
 	}
 
-	public ResponseBodyResultHandler(List<MessageToByteEncoder<?>> serializers, List<MessageToByteEncoder<ByteBuffer>> postProcessors) {
+	public ResponseBodyResultHandler(List<MessageToByteEncoder<?>> serializers, List<MessageToByteEncoder<ByteBuffer>>
+	  postProcessors) {
+		this(serializers, postProcessors, DefaultCompositionConverter.INSTANCE);
+	}
+
+	public ResponseBodyResultHandler(List<MessageToByteEncoder<?>> serializers, List<MessageToByteEncoder<ByteBuffer>>
+	  postProcessors, ConversionService conversionService) {
 		this.serializers = serializers;
 		this.postProcessors = postProcessors;
+		this.conversionService = conversionService;
 	}
 
 	public void setOrder(int order) {
@@ -86,16 +93,18 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 		Object handler = result.getHandler();
 		if (handler instanceof HandlerMethod) {
 			HandlerMethod handlerMethod = (HandlerMethod) handler;
-			Type publisherVoidType = new ParameterizedTypeReference<Publisher<Void>>(){}.getType();
+			Type publisherVoidType = new ParameterizedTypeReference<Publisher<Void>>() {
+			}.getType();
 			return AnnotatedElementUtils.isAnnotated(handlerMethod.getMethod(), ResponseBody.class.getName()) &&
-					!handlerMethod.getReturnType().getGenericParameterType().equals(publisherVoidType);
+			  !handlerMethod.getReturnType().getGenericParameterType().equals(publisherVoidType);
 		}
 		return false;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Publisher<Void> handleResult(ServerHttpRequest request, ServerHttpResponse response,
-			HandlerResult result) {
+	                                    HandlerResult result) {
 
 		Object value = result.getValue();
 		HandlerMethod handlerMethod = (HandlerMethod) result.getHandler();
@@ -109,19 +118,13 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 		ResolvableType type = ResolvableType.forMethodParameter(returnType);
 		List<Object> hints = new ArrayList<>();
 		hints.add(UTF_8);
-		MessageToByteEncoder<Object> serializer = (MessageToByteEncoder<Object>)resolveSerializer(request, type, mediaType, hints.toArray());
+		MessageToByteEncoder<Object> serializer = (MessageToByteEncoder<Object>) resolveSerializer(request, type,
+		  mediaType, hints.toArray());
 		if (serializer != null) {
 			Publisher<Object> elementStream;
 
-			// TODO: Refactor type conversion
-			if (Promise.class.isAssignableFrom(type.getRawClass())) {
-				elementStream = ((Promise)value).stream();
-			}
-			else if (Observable.class.isAssignableFrom(type.getRawClass())) {
-				elementStream = RxReactiveStreams.toPublisher((Observable) value);
-			}
-			else if (Single.class.isAssignableFrom(type.getRawClass())) {
-				elementStream = RxReactiveStreams.toPublisher(((Single)value).toObservable());
+			if (conversionService.canConvert(type.getRawClass(), Publisher.class)) {
+				elementStream = conversionService.convert(value, Publisher.class);
 			}
 			else if (CompletableFuture.class.isAssignableFrom(type.getRawClass())) {
 				elementStream = CompletableFutureUtils.toPublisher((CompletableFuture) value);

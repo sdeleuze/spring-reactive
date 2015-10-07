@@ -15,22 +15,22 @@
  */
 package org.springframework.reactive.web.http.rxnetty;
 
-import java.nio.ByteBuffer;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import org.reactivestreams.Publisher;
-import reactor.io.buffer.Buffer;
-import rx.Observable;
-import rx.RxReactiveStreams;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.reactive.web.http.ServerHttpResponse;
 import org.springframework.util.Assert;
+import reactor.io.buffer.Buffer;
+import rx.Observable;
+import rx.RxReactiveStreams;
+
+import java.nio.ByteBuffer;
 
 /**
  * @author Rossen Stoyanchev
+ * @author Stephane Maldini
  */
 public class RxNettyServerHttpResponse implements ServerHttpResponse {
 
@@ -56,6 +56,10 @@ public class RxNettyServerHttpResponse implements ServerHttpResponse {
 	@Override
 	public HttpHeaders getHeaders() {
 		return (this.headersWritten ? HttpHeaders.readOnlyHttpHeaders(this.headers) : this.headers);
+	}
+
+	public Observable<Void> writeWith(Observable<ByteBuffer> contentPublisher) {
+		return this.response.writeBytes(contentPublisher.map(content -> new Buffer(content).asBytes()));
 	}
 
 	@Override
