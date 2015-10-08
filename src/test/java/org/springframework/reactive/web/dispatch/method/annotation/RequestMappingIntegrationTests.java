@@ -17,16 +17,29 @@ package org.springframework.reactive.web.dispatch.method.annotation;
 
 
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.Assert.assertEquals;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
+import org.springframework.core.ResolvableType;
 import org.springframework.reactive.codec.decoder.JacksonJsonDecoder;
 import org.springframework.reactive.codec.decoder.JsonObjectDecoder;
 import org.springframework.reactive.codec.decoder.StringDecoder;
+import org.springframework.reactive.web.http.ServerHttpRequest;
+import org.springframework.reactive.web.http.ServerHttpResponse;
+import org.springframework.reactive.web.http.reactor.ReactorHttpServer;
+import org.springframework.reactive.web.http.reactor.ReactorServerHttpRequest;
+import org.springframework.reactive.web.http.reactor.ReactorServerHttpResponse;
+import org.springframework.reactive.web.http.rxnetty.RxNettyHttpServer;
+import org.springframework.reactive.web.http.rxnetty.RxNettyServerHttpRequest;
+import org.springframework.reactive.web.http.rxnetty.RxNettyServerHttpResponse;
+import reactor.io.buffer.Buffer;
 import reactor.rx.Promise;
 import reactor.rx.Promises;
 import reactor.rx.Stream;
@@ -84,6 +97,54 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 
 		URI url = new URI("http://localhost:" + port + "/param?name=George");
 		RequestEntity<Void> request = RequestEntity.get(url).build();
+		ResponseEntity<String> response = restTemplate.exchange(request, String.class);
+
+		assertEquals("Hello George!", response.getBody());
+	}
+
+	@Test
+	public void rawPojoResponse() throws Exception {
+
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI("http://localhost:" + port + "/raw");
+		RequestEntity<Void> request = RequestEntity.get(url).build();
+		ResponseEntity<Person> response = restTemplate.exchange(request, Person.class);
+
+		assertEquals("Robert", response.getBody().getName());
+	}
+
+	@Test
+	public void rawHelloResponse() throws Exception {
+
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI("http://localhost:" + port + "/raw-observable");
+		RequestEntity<Void> request = RequestEntity.get(url).build();
+		ResponseEntity<String> response = restTemplate.exchange(request, String.class);
+
+		assertEquals("Hello!", response.getBody());
+	}
+
+	@Test
+	public void customReactorReqResp() throws Exception {
+		if(server.getClass() == ReactorHttpServer.class) {
+			RestTemplate restTemplate = new RestTemplate();
+
+			URI url = new URI("http://localhost:" + port + "/stream-custom");
+			RequestEntity<String> request = RequestEntity.post(url).body("Hello George!");
+			ResponseEntity<String> response = restTemplate.exchange(request, String.class);
+
+			assertEquals("Hello George!", response.getBody());
+		}
+	}
+
+	@Test
+	public void customReqResp() throws Exception {
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI("http://localhost:" + port + "/publisher-custom");
+		RequestEntity<String> request = RequestEntity.post(url).body("Hello George!");
 		ResponseEntity<String> response = restTemplate.exchange(request, String.class);
 
 		assertEquals("Hello George!", response.getBody());
@@ -249,6 +310,19 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 			return CompletableFuture.completedFuture(new Person("Robert"));
 		}
 
+		@RequestMapping("/raw")
+		@ResponseBody
+		public Publisher<ByteBuffer> rawResponseBody() {
+			JacksonJsonEncoder encoder = new JacksonJsonEncoder();
+			return encoder.encode(Streams.just(new Person("Robert")), ResolvableType.forClass(Person.class), MediaType.APPLICATION_JSON);
+		}
+
+		@RequestMapping("/raw-observable")
+		@ResponseBody
+		public Observable<ByteBuffer> rawObservableResponseBody() {
+			return Observable.just(Buffer.wrap("Hello!").byteBuffer());
+		}
+
 		@RequestMapping("/single")
 		@ResponseBody
 		public Single<Person> singleResponseBody() {
@@ -310,6 +384,18 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 				person.setName(person.getName().toUpperCase());
 				return person;
 			});
+		}
+
+		@RequestMapping("/publisher-custom")
+		@ResponseBody
+		public Publisher<Void> publisherCustom(ServerHttpRequest req,ServerHttpResponse resp) {
+			return resp.writeWith(req.getBody());
+		}
+
+		@RequestMapping("/stream-custom")
+		@ResponseBody
+		public Stream<Void> streamCustom(ReactorServerHttpRequest req, ReactorServerHttpResponse resp) {
+			return resp.writeWith(req.getBody().log());
 		}
 
 		@RequestMapping("/completable-future-capitalize")

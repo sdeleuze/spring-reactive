@@ -21,6 +21,7 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.springframework.util.Assert;
 import reactor.Publishers;
+import reactor.core.error.CancelException;
 import reactor.core.error.Exceptions;
 import reactor.core.support.BackpressureUtils;
 
@@ -138,6 +139,9 @@ public class CompletableFutureUtils {
 			try {
 				if (future.isDone()) {
 					Publishers.just(future.get()).subscribe(subscriber);
+				}
+				else if ( future.isCancelled()){
+					Exceptions.publisher(CancelException.get());
 				}
 				else {
 					futurePublisher.subscribe(subscriber);

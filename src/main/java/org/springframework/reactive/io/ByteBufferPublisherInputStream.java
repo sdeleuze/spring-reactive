@@ -127,13 +127,13 @@ public class ByteBufferPublisherInputStream extends InputStream {
 			} else {
 				// take() blocks until next or complete() then return null, but that's OK since this is a *blocking* InputStream
 				ByteBuffer signal = this.queue.take();
+				if(signal == null){
+					this.completed = true;
+					return null;
+				}
 				this.currentStream = new ByteBufferInputStream(signal);
 				return this.currentStream;
 			}
-		}
-		catch ( CancelException ce) {
-			this.completed = true;
-			return null;
 		}
 		catch (InterruptedException ex) {
 			Thread.currentThread().interrupt();

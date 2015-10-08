@@ -118,7 +118,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			return null;
 		}
 		for (Object providedArg : providedArgs) {
-			if (parameter.getParameterType().isInstance(providedArg)) {
+			if (parameter.getParameterType().isAssignableFrom(providedArg.getClass())) {
 				return providedArg;
 			}
 		}

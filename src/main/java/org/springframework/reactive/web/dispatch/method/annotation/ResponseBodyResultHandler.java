@@ -95,8 +95,8 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 			HandlerMethod handlerMethod = (HandlerMethod) handler;
 			Type publisherVoidType = new ParameterizedTypeReference<Publisher<Void>>() {
 			}.getType();
-			return AnnotatedElementUtils.isAnnotated(handlerMethod.getMethod(), ResponseBody.class.getName()) &&
-			  !handlerMethod.getReturnType().getGenericParameterType().equals(publisherVoidType);
+			return AnnotatedElementUtils.isAnnotated(handlerMethod.getMethod(), ResponseBody.class.getName()) ||
+			  handlerMethod.getReturnType().getGenericParameterType().equals(publisherVoidType);
 		}
 		return false;
 	}
@@ -114,8 +114,27 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 			return Publishers.empty();
 		}
 
-		MediaType mediaType = resolveMediaType(request);
 		ResolvableType type = ResolvableType.forMethodParameter(returnType);
+
+		ResolvableType readType = null;
+		if (conversionService.canConvert(Publisher.class, type.getRawClass()) ||
+		  Publisher.class.isAssignableFrom(type.getRawClass())) {
+			readType = type.getGeneric(0);
+		}
+
+		MediaType mediaType = resolveMediaType(request);
+
+		// Raw write
+		if (null != readType){
+			if(ByteBuffer.class.isAssignableFrom(readType.getRawClass())) {
+				response.getHeaders().setContentType(mediaType);
+				return response.writeWith(conversionService.convert(value, Publisher.class));
+			}
+			else if (Void.class.isAssignableFrom(readType.getRawClass())) {
+				return conversionService.convert(value, Publisher.class);
+			}
+		}
+
 		List<Object> hints = new ArrayList<>();
 		hints.add(UTF_8);
 		MessageToByteEncoder<Object> serializer = (MessageToByteEncoder<Object>) resolveSerializer(request, type,

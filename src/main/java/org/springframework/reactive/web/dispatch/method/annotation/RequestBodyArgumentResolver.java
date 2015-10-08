@@ -71,6 +71,7 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Object resolveArgument(MethodParameter parameter, ServerHttpRequest request) {
 
 		MediaType mediaType = resolveMediaType(request);
@@ -78,42 +79,43 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 		List<Object> hints = new ArrayList<>();
 		hints.add(UTF_8);
 
-		// TODO: Refactor type conversion
-		ResolvableType readType = type;
+		ResolvableType readType = null;
 		if (conversionService.canConvert(Publisher.class, type.getRawClass()) ||
 				Publisher.class.isAssignableFrom(type.getRawClass()) ||
 				CompletableFuture.class.isAssignableFrom(type.getRawClass())) {
 			readType = type.getGeneric(0);
 		}
 
+		// Raw read
+		if (readType != null && ByteBuffer.class.isAssignableFrom(readType.getRawClass())){
+			return conversionService.convert(request.getBody(), type.getClass());
+		}
+
+		Publisher<ByteBuffer> inputStream = request.getBody();
+		Publisher<?> elementStream = inputStream;
+
+
 		ByteToMessageDecoder<?> deserializer = resolveDeserializers(request, type, mediaType, hints.toArray());
 		if (deserializer != null) {
+			List<ByteToMessageDecoder<ByteBuffer>> preProcessors =
+			  resolvePreProcessors(request, type, mediaType,hints.toArray());
 
-			Publisher<ByteBuffer> inputStream = request.getBody();
-			List<ByteToMessageDecoder<ByteBuffer>> preProcessors = resolvePreProcessors(request, type, mediaType, hints.toArray());
 			for (ByteToMessageDecoder<ByteBuffer> preProcessor : preProcessors) {
 				inputStream = preProcessor.decode(inputStream, type, mediaType, hints.toArray());
 			}
-			Publisher<?> elementStream = deserializer.decode(inputStream, readType, mediaType, UTF_8);
-
-			if (conversionService.canConvert(Publisher.class, type.getRawClass())) {
-				return conversionService.convert(elementStream, type.getRawClass());
-			}
-			else if (CompletableFuture.class.isAssignableFrom(type.getRawClass())) {
-				return CompletableFutureUtils.fromSinglePublisher(elementStream);
-			}
-			else if (Publisher.class.isAssignableFrom(type.getRawClass())) {
-				return elementStream;
-			}
-			else {
-				try {
-					return Publishers.toReadQueue(elementStream, 1, true).poll(30, TimeUnit.SECONDS);
-				} catch(InterruptedException ex) {
-					return Publishers.error(new IllegalStateException("Timeout before getter the value"));
-				}
-			}
+			elementStream = deserializer.decode(inputStream, readType, mediaType, UTF_8);
 		}
-		return Publishers.error(new IllegalStateException("Argument type not supported: " + type));
+
+
+		if (conversionService.canConvert(Publisher.class, type.getRawClass())) {
+			return conversionService.convert(elementStream, type.getRawClass());
+		}
+		else if (CompletableFuture.class.isAssignableFrom(type.getRawClass())) {
+			return CompletableFutureUtils.fromSinglePublisher(elementStream);
+		}
+		else {
+			return elementStream;
+		}
 	}
 
 	private MediaType resolveMediaType(ServerHttpRequest request) {
