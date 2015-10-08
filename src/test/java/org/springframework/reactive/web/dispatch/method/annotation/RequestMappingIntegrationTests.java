@@ -387,13 +387,11 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 		}
 
 		@RequestMapping("/publisher-custom")
-		@ResponseBody
 		public Publisher<Void> publisherCustom(ServerHttpRequest req,ServerHttpResponse resp) {
 			return resp.writeWith(req.getBody());
 		}
 
 		@RequestMapping("/stream-custom")
-		@ResponseBody
 		public Stream<Void> streamCustom(ReactorServerHttpRequest req, ReactorServerHttpResponse resp) {
 			return resp.writeWith(req.getBody().log());
 		}

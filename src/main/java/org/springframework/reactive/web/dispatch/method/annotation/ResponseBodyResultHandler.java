@@ -92,11 +92,20 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 	public boolean supports(HandlerResult result) {
 		Object handler = result.getHandler();
 		if (handler instanceof HandlerMethod) {
+
 			HandlerMethod handlerMethod = (HandlerMethod) handler;
-			Type publisherVoidType = new ParameterizedTypeReference<Publisher<Void>>() {
-			}.getType();
-			return AnnotatedElementUtils.isAnnotated(handlerMethod.getMethod(), ResponseBody.class.getName()) ||
-			  handlerMethod.getReturnType().getGenericParameterType().equals(publisherVoidType);
+
+			if(AnnotatedElementUtils.isAnnotated(handlerMethod.getMethod(), ResponseBody.class.getName())){
+				return true;
+			}
+
+			ResolvableType type = ResolvableType.forMethodParameter(handlerMethod.getReturnType());
+			ResolvableType readType = null;
+			if (conversionService.canConvert(Publisher.class, type.getRawClass()) ||
+			  Publisher.class.isAssignableFrom(type.getRawClass())) {
+				readType = type.getGeneric(0);
+			}
+			return readType != null && readType.getRawClass().equals(Void.class);
 		}
 		return false;
 	}
