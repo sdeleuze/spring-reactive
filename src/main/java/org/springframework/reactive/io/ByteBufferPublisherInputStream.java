@@ -36,113 +36,119 @@ import java.util.concurrent.BlockingQueue;
  */
 public class ByteBufferPublisherInputStream extends InputStream {
 
-	private final BlockingQueue<ByteBuffer> queue;
+    private final BlockingQueue<ByteBuffer> queue;
 
-	private ByteBufferInputStream currentStream;
+    private ByteBufferInputStream currentStream;
 
-	private boolean completed;
-
-
-	/**
-	 * Creates a new {@code ByteArrayPublisherInputStream} based on the given publisher.
-	 *
-	 * @param publisher the publisher to use
-	 */
-	public ByteBufferPublisherInputStream(Publisher<ByteBuffer> publisher) {
-		this(publisher, 1);
-	}
-
-	/**
-	 * Creates a new {@code ByteArrayPublisherInputStream} based on the given publisher.
-	 *
-	 * @param publisher   the publisher to use
-	 * @param requestSize the {@linkplain Subscription#request(long) request size} to use
-	 *                    on the publisher bound to Integer MAX
-	 */
-	public ByteBufferPublisherInputStream(Publisher<ByteBuffer> publisher, int requestSize) {
-		Assert.notNull(publisher, "'publisher' must not be null");
-
-		this.queue = Publishers.toReadQueue(publisher, requestSize);
-	}
+    private boolean completed;
 
 
-	@Override
-	public int available() throws IOException {
-		if (completed) {
-			return 0;
-		}
-		InputStream is = currentStream();
-		return is != null ? is.available() : 0;
-	}
+    /**
+     * Creates a new {@code ByteArrayPublisherInputStream} based on the given publisher.
+     *
+     * @param publisher the publisher to use
+     */
+    public ByteBufferPublisherInputStream(Publisher<ByteBuffer> publisher) {
+        this(publisher, 1);
+    }
 
-	@Override
-	public int read() throws IOException {
-		if (completed) {
-			return -1;
-		}
-		InputStream is = currentStream();
-		while (is != null) {
-			int ch = is.read();
-			if (ch != -1) {
-				return ch;
-			} else {
-				is = currentStream();
-			}
-		}
-		return -1;
-	}
+    /**
+     * Creates a new {@code ByteArrayPublisherInputStream} based on the given publisher.
+     *
+     * @param publisher   the publisher to use
+     * @param requestSize the {@linkplain Subscription#request(long) request size} to use
+     *                    on the publisher bound to Integer MAX
+     */
+    public ByteBufferPublisherInputStream(Publisher<ByteBuffer> publisher, int requestSize) {
+        Assert.notNull(publisher, "'publisher' must not be null");
 
-	@Override
-	public int read(byte[] b, int off, int len) throws IOException {
-		if (completed) {
-			return -1;
-		}
-		InputStream is = currentStream();
-		if (is == null) {
-			return -1;
-		} else if (b == null) {
-			throw new NullPointerException();
-		} else if (off < 0 || len < 0 || len > b.length - off) {
-			throw new IndexOutOfBoundsException();
-		} else if (len == 0) {
-			return 0;
-		}
-		do {
-			int n = is.read(b, off, len);
-			if (n > 0) {
-				return n;
-			} else {
-				is = currentStream();
-			}
-		}
-		while (is != null);
+        this.queue = Publishers.toReadQueue(publisher, requestSize);
+    }
 
-		return -1;
-	}
 
-	private InputStream currentStream() throws IOException {
-		try {
-			if (this.currentStream != null && this.currentStream.available() > 0) {
-				return this.currentStream;
-			} else {
-				// take() blocks until next or complete() then return null, but that's OK since this is a *blocking* InputStream
-				ByteBuffer signal = this.queue.take();
-				if(signal == null){
-					this.completed = true;
-					return null;
-				}
-				this.currentStream = new ByteBufferInputStream(signal);
-				return this.currentStream;
-			}
-		}
-		catch (InterruptedException ex) {
-			Thread.currentThread().interrupt();
-		}
-		catch ( Throwable error ){
-			this.completed = true;
-			throw new IOException(error);
-		}
-		throw new IOException();
-	}
+    @Override
+    public int available() throws IOException {
+        if (completed) {
+            return 0;
+        }
+        InputStream is = currentStream();
+        return is != null ? is.available() : 0;
+    }
+
+    @Override
+    public int read() throws IOException {
+        if (completed) {
+            return -1;
+        }
+        InputStream is = currentStream();
+        while (is != null) {
+            int ch = is.read();
+            if (ch != -1) {
+                return ch;
+            }
+            else {
+                is = currentStream();
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (completed) {
+            return -1;
+        }
+        InputStream is = currentStream();
+        if (is == null) {
+            return -1;
+        }
+        else if (b == null) {
+            throw new NullPointerException();
+        }
+        else if (off < 0 || len < 0 || len > b.length - off) {
+            throw new IndexOutOfBoundsException();
+        }
+        else if (len == 0) {
+            return 0;
+        }
+        do {
+            int n = is.read(b, off, len);
+            if (n > 0) {
+                return n;
+            }
+            else {
+                is = currentStream();
+            }
+        }
+        while (is != null);
+
+        return -1;
+    }
+
+    private InputStream currentStream() throws IOException {
+        try {
+            if (this.currentStream != null && this.currentStream.available() > 0) {
+                return this.currentStream;
+            }
+            else {
+                // take() blocks until next or complete() then return null, but that's OK since this is a *blocking* InputStream
+                ByteBuffer signal = this.queue.take();
+                if (signal == null) {
+                    this.completed = true;
+                    return null;
+                }
+                this.currentStream = new ByteBufferInputStream(signal);
+                return this.currentStream;
+            }
+        }
+        catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+        catch (Throwable error) {
+            this.completed = true;
+            throw new IOException(error);
+        }
+        throw new IOException();
+    }
 
 }
