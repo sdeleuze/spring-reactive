@@ -151,6 +151,17 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 	}
 
 	@Test
+	public void publisherOne() throws Exception {
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI("http://localhost:" + port + "/publisher-1-capitalize");
+		RequestEntity<Person> request = RequestEntity.post(url).body(new Person("Robert"));
+		ResponseEntity<Person> response = restTemplate.exchange(request, Person.class);
+
+		assertEquals("ROBERT", response.getBody().getName());
+	}
+
+	@Test
 	public void serializeAsPojo() throws Exception {
 		serializeAsPojo("http://localhost:" + port + "/person");
 	}
@@ -366,6 +377,13 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 				person.setName(person.getName().toUpperCase());
 				return person;
 			});
+		}
+
+		@RequestMapping("/publisher-1-capitalize")
+		@ResponseBody
+		public Person publisherOneCapitalize(@RequestBody Person person) {
+			person.setName(person.getName().toUpperCase());
+			return person;
 		}
 
 		@RequestMapping("/observable-capitalize")

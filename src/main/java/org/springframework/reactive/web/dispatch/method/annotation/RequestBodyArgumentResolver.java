@@ -90,6 +90,7 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 		if (readType != null && ByteBuffer.class.isAssignableFrom(readType.getRawClass())){
 			return conversionService.convert(request.getBody(), type.getClass());
 		}
+		readType = readType == null ? type : readType;
 
 		Publisher<ByteBuffer> inputStream = request.getBody();
 		Publisher<?> elementStream = inputStream;
@@ -114,7 +115,12 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 			return CompletableFutureUtils.fromSinglePublisher(elementStream);
 		}
 		else {
-			return elementStream;
+			try {
+				return Publishers.toReadQueue(elementStream, 1).poll(30, TimeUnit.SECONDS);
+			}
+			catch (InterruptedException ex) {
+				throw new IllegalStateException("Timeout before getter the value", ex);
+			}
 		}
 	}
 
