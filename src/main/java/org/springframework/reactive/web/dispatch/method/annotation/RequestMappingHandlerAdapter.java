@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.reactive.codec.decoder.ByteBufferDecoder;
 import org.springframework.reactive.codec.decoder.JacksonJsonDecoder;
 import org.springframework.reactive.codec.decoder.JsonObjectDecoder;
 import org.springframework.reactive.codec.decoder.StringDecoder;
@@ -51,7 +52,8 @@ public class RequestMappingHandlerAdapter implements HandlerAdapter, Initializin
 		if (this.argumentResolvers == null) {
 			this.argumentResolvers = new ArrayList<>();
 			this.argumentResolvers.add(new RequestParamArgumentResolver());
-			this.argumentResolvers.add(new RequestBodyArgumentResolver(Arrays.asList(new StringDecoder(), new JacksonJsonDecoder()), Arrays.asList(new JsonObjectDecoder(true))));
+			this.argumentResolvers.add(new RequestBodyArgumentResolver(Arrays.asList(new ByteBufferDecoder(),
+			new StringDecoder(), new JacksonJsonDecoder()), Arrays.asList(new JsonObjectDecoder(true))));
 		}
 	}
 

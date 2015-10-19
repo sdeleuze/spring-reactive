@@ -24,6 +24,7 @@ import reactor.Publishers;
 import reactor.io.buffer.Buffer;
 import reactor.io.net.http.HttpChannel;
 import reactor.io.net.http.model.Status;
+import reactor.rx.Stream;
 
 import java.nio.ByteBuffer;
 
@@ -57,7 +58,7 @@ public class ReactorServerHttpResponse implements ServerHttpResponse {
 	}
 
 	@Override
-	public Publisher<Void> writeWith(Publisher<ByteBuffer> contentPublisher) {
+	public Stream<Void> writeWith(Publisher<ByteBuffer> contentPublisher) {
 		writeHeaders();
 		return this.channel.writeWith(Publishers.map(contentPublisher, Buffer::new));
 	}

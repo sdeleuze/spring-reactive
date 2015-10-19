@@ -21,15 +21,13 @@ import org.reactivestreams.Subscriber;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;
 import org.springframework.reactive.codec.decoder.JsonObjectDecoder;
-import org.springframework.util.ClassUtils;
+import org.springframework.reactive.codec.support.HintUtils;
 
 import reactor.core.subscriber.SubscriberBarrier;
-import reactor.io.buffer.Buffer;
-import reactor.rx.Promise;
-import rx.Observable;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collection;
 
 import static reactor.Publishers.*;
 
@@ -44,12 +42,6 @@ import static reactor.Publishers.*;
  */
 public class JsonObjectEncoder implements MessageToByteEncoder<ByteBuffer> {
 
-	private static final boolean rxJava1Present =
-			ClassUtils.isPresent("rx.Observable", JsonObjectEncoder.class.getClassLoader());
-
-	private static final boolean reactorPresent =
-			ClassUtils.isPresent("reactor.rx.Promise", JsonObjectEncoder.class.getClassLoader());
-
 	final ByteBuffer START_ARRAY = ByteBuffer.wrap("[".getBytes());
 
 	final ByteBuffer END_ARRAY = ByteBuffer.wrap("]".getBytes());
@@ -59,10 +51,8 @@ public class JsonObjectEncoder implements MessageToByteEncoder<ByteBuffer> {
 
 	@Override
 	public boolean canEncode(ResolvableType type, MediaType mediaType, Object... hints) {
-		return mediaType.isCompatibleWith(MediaType.APPLICATION_JSON) &&
-				!(reactorPresent && Promise.class.isAssignableFrom(type.getRawClass())) &&
-				(rxJava1Present && Observable.class.isAssignableFrom(type.getRawClass())
-				|| Publisher.class.isAssignableFrom(type.getRawClass()));
+		return mediaType.isCompatibleWith(MediaType.APPLICATION_JSON)
+				&& HintUtils.containsHint(Collection.class, hints);
 	}
 
 	@Override
