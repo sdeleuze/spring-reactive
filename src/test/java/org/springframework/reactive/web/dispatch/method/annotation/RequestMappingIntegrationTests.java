@@ -18,6 +18,7 @@ package org.springframework.reactive.web.dispatch.method.annotation;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -26,6 +27,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.reactivestreams.Publisher;
+
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.ResolvableType;
 import reactor.io.buffer.Buffer;
 import reactor.rx.Promise;
@@ -36,6 +39,7 @@ import rx.Observable;
 import rx.Single;
 
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +48,7 @@ import org.springframework.reactive.codec.encoder.JacksonJsonEncoder;
 import org.springframework.reactive.codec.encoder.JsonObjectEncoder;
 import org.springframework.reactive.codec.encoder.StringEncoder;
 import org.springframework.reactive.web.dispatch.DispatcherHandler;
+import org.springframework.reactive.web.dispatch.SimpleHandlerResultHandler;
 import org.springframework.reactive.web.http.AbstractHttpHandlerIntegrationTests;
 import org.springframework.reactive.web.http.HttpHandler;
 import org.springframework.stereotype.Controller;
@@ -61,17 +66,21 @@ import org.springframework.web.context.support.StaticWebApplicationContext;
  */
 public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrationTests {
 
+	private TestController controller;
+
 	@Override
 	protected HttpHandler createHttpHandler() {
 
 		StaticWebApplicationContext wac = new StaticWebApplicationContext();
+		DefaultListableBeanFactory factory =  wac.getDefaultListableBeanFactory();
 		wac.registerSingleton("handlerMapping", RequestMappingHandlerMapping.class);
 		wac.registerSingleton("handlerAdapter", RequestMappingHandlerAdapter.class);
-		wac.getDefaultListableBeanFactory().registerSingleton("responseBodyResultHandler",
+		factory.registerSingleton("responseBodyResultHandler",
 		  new ResponseBodyResultHandler(Arrays.asList(new ByteBufferEncoder(), new StringEncoder(), new JacksonJsonEncoder()), Arrays.asList
 		    (new JsonObjectEncoder())));
-
-		wac.registerSingleton("controller", TestController.class);
+		wac.registerSingleton("simpleResultHandler", SimpleHandlerResultHandler.class);
+		this.controller = new TestController();
+		factory.registerSingleton("controller", this.controller);
 		wac.refresh();
 
 		DispatcherHandler dispatcherHandler = new DispatcherHandler();
@@ -186,6 +195,19 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 		capitalizePojo("http://localhost:" + port + "/promise-capitalize");
 	}
 
+	@Test
+	public void create() throws Exception {
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI("http://localhost:" + port + "/create");
+		List<Person> persons = Arrays.asList(new Person("Robert"), new Person("Marie"));
+		RequestEntity<List<Person>> request = RequestEntity.post(url).contentType(MediaType.APPLICATION_JSON).body(persons);
+		ResponseEntity<Void> response = restTemplate.exchange(request, Void.class);
+
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		assertEquals(2, this.controller.persons.size());
+	}
+
 
 	public void serializeAsPojo(String requestUrl) throws Exception {
 		RestTemplate restTemplate = new RestTemplate();
@@ -257,6 +279,8 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 	@Controller
 	@SuppressWarnings("unused")
 	private static class TestController {
+
+		final List<Person> persons = new ArrayList<>();
 
 		@RequestMapping("/param")
 		@ResponseBody
@@ -377,6 +401,11 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 				person.setName(person.getName().toUpperCase());
 				return person;
 			});
+		}
+
+		@RequestMapping("/create")
+		public Publisher<Void> create(@RequestBody Stream<Person> personStream) {
+			return personStream.toList().onSuccess(personList -> persons.addAll(personList)).after();
 		}
 
 		//TODO add mixed and T request mappings tests
