@@ -107,10 +107,9 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 
 		URI url = new URI("http://localhost:" + port + "/raw");
 		RequestEntity<Void> request = RequestEntity.get(url).build();
-		List<Person> results = restTemplate.exchange(request, new ParameterizedTypeReference<List<Person>>(){}).getBody();
+		Person person = restTemplate.exchange(request, Person.class).getBody();
 
-		assertEquals(1, results.size());
-		assertEquals(new Person("Robert"), results.get(0));
+		assertEquals(new Person("Robert"), person);
 	}
 
 	@Test

@@ -53,7 +53,7 @@ public class RequestMappingHandlerAdapter implements HandlerAdapter, Initializin
 			this.argumentResolvers = new ArrayList<>();
 			this.argumentResolvers.add(new RequestParamArgumentResolver());
 			this.argumentResolvers.add(new RequestBodyArgumentResolver(Arrays.asList(new ByteBufferDecoder(),
-			new StringDecoder(), new JacksonJsonDecoder()), Arrays.asList(new JsonObjectDecoder(true))));
+			new StringDecoder(), new JacksonJsonDecoder()), Arrays.asList(new JsonObjectDecoder())));
 		}
 	}
 

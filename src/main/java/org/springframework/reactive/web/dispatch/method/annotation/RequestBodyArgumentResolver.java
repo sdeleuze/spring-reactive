@@ -19,20 +19,18 @@ package org.springframework.reactive.web.dispatch.method.annotation;
 import org.reactivestreams.Publisher;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
-import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.reactive.codec.decoder.ByteToMessageDecoder;
 import org.springframework.reactive.web.dispatch.method.HandlerMethodArgumentResolver;
-import org.springframework.reactive.convert.DefaultConversionService;
-import org.springframework.reactive.convert.ReactiveConversionService;
+import org.springframework.reactive.convert.DefaultReactiveConversionService;
 import org.springframework.reactive.web.http.ServerHttpRequest;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,7 +44,7 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 
 	private final List<ByteToMessageDecoder<?>> deserializers;
 	private final List<ByteToMessageDecoder<ByteBuffer>> preProcessors;
-	private final ReactiveConversionService conversionService;
+	private final ConversionService conversionService;
 
 
 	public RequestBodyArgumentResolver(List<ByteToMessageDecoder<?>> deserializers) {
@@ -55,11 +53,11 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 
 	public RequestBodyArgumentResolver(List<ByteToMessageDecoder<?>> deserializers,
 			List<ByteToMessageDecoder<ByteBuffer>> preProcessors) {
-		this(deserializers, preProcessors, new DefaultConversionService());
+		this(deserializers, preProcessors, new DefaultReactiveConversionService());
 	}
 
 	public RequestBodyArgumentResolver(List<ByteToMessageDecoder<?>> deserializers,
-			List<ByteToMessageDecoder<ByteBuffer>> preProcessors, ReactiveConversionService conversionService) {
+			List<ByteToMessageDecoder<ByteBuffer>> preProcessors, ConversionService conversionService) {
 		this.deserializers = deserializers;
 		this.conversionService = conversionService;
 		this.preProcessors = preProcessors;
@@ -78,13 +76,6 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 		ResolvableType type = ResolvableType.forMethodParameter(parameter);
 		List<Object> hints = new ArrayList<>();
 		hints.add(UTF_8);
-
-		TypeDescriptor sourceType = TypeDescriptor.valueOf(Publisher.class);
-		TypeDescriptor targetType = TypeDescriptor.valueOf(type.getRawClass());
-		if (Boolean.TRUE.equals(conversionService.isCollection(sourceType, targetType))) {
-			hints.add(Collection.class);
-		}
-
 		Publisher<ByteBuffer> inputStream = request.getBody();
 		Publisher<?> elementStream = inputStream;
 		ResolvableType elementType = type.hasGenerics() ? type.getGeneric(0) : type;

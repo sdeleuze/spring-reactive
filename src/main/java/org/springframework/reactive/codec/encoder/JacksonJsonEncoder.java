@@ -63,6 +63,7 @@ public class JacksonJsonEncoder implements MessageToByteEncoder<Object> {
 				throw new CodecException("Error while writing the data", e);
 			}
 			buffer.flip();
+			System.out.println("||||" + buffer.asString() + "||||");
 			return buffer.byteBuffer();
 		});
 	}

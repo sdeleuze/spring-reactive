@@ -19,13 +19,14 @@ package org.springframework.reactive.convert;
 import reactor.core.publisher.convert.CompositionDependencyUtils;
 
 import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.convert.support.GenericConversionService;
 
 /**
  * @author Sebastien Deleuze
  */
-public class DefaultConversionService extends ReactiveConversionService {
+public class DefaultReactiveConversionService extends GenericConversionService {
 
-	public DefaultConversionService() {
+	public DefaultReactiveConversionService() {
 		addDefaultConverters(this);
 	}
 

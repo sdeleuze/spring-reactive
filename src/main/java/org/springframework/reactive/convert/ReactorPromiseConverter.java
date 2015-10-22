@@ -53,7 +53,7 @@ public final class ReactorPromiseConverter implements ReactiveConverter {
 	public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 		if (source != null) {
 			if (Promise.class.isAssignableFrom(source.getClass())) {
-				return ((Promise<?>)source).stream();
+				return ((Promise<?>)source);
 			} else  {
 				return Streams.wrap((Publisher)source).next();
 			}

@@ -20,14 +20,13 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.Ordered;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.reactive.codec.encoder.MessageToByteEncoder;
 import org.springframework.reactive.web.dispatch.HandlerResult;
 import org.springframework.reactive.web.dispatch.HandlerResultHandler;
-import org.springframework.reactive.convert.DefaultConversionService;
-import org.springframework.reactive.convert.ReactiveConversionService;
+import org.springframework.reactive.convert.DefaultReactiveConversionService;
 import org.springframework.reactive.web.http.ServerHttpRequest;
 import org.springframework.reactive.web.http.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -37,7 +36,6 @@ import reactor.Publishers;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,7 +54,7 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 
 	private final List<MessageToByteEncoder<?>> serializers;
 	private final List<MessageToByteEncoder<ByteBuffer>> postProcessors;
-	private final ReactiveConversionService conversionService;
+	private final ConversionService conversionService;
 
 	private int order = 0;
 
@@ -66,11 +64,11 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 	}
 
 	public ResponseBodyResultHandler(List<MessageToByteEncoder<?>> serializers, List<MessageToByteEncoder<ByteBuffer>> postProcessors) {
-		this(serializers, postProcessors, new DefaultConversionService());
+		this(serializers, postProcessors, new DefaultReactiveConversionService());
 	}
 
 	public ResponseBodyResultHandler(List<MessageToByteEncoder<?>> serializers, List<MessageToByteEncoder<ByteBuffer>>
-	  postProcessors, ReactiveConversionService conversionService) {
+	  postProcessors, ConversionService conversionService) {
 		this.serializers = serializers;
 		this.postProcessors = postProcessors;
 		this.conversionService = conversionService;
@@ -113,13 +111,6 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 		MediaType mediaType = resolveMediaType(request);
 		List<Object> hints = new ArrayList<>();
 		hints.add(UTF_8);
-
-		TypeDescriptor sourceType = TypeDescriptor.valueOf(type.getRawClass());
-		TypeDescriptor targetType = TypeDescriptor.valueOf(Publisher.class);
-		if (Boolean.TRUE.equals(conversionService.isCollection(sourceType, targetType))) {
-			hints.add(Collection.class);
-		}
-
 		Publisher<Object> elementStream;
 		ResolvableType elementType;
 		if (conversionService.canConvert(type.getRawClass(), Publisher.class)) {
