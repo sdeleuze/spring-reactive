@@ -16,7 +16,7 @@
 
 package org.springframework.reactive.convert;
 
-import reactor.core.publisher.convert.CompositionDependencyUtils;
+import reactor.core.publisher.convert.DependencyUtils;
 
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -33,14 +33,14 @@ public class DefaultReactiveConversionService extends GenericConversionService {
 	public static void addDefaultConverters(ConverterRegistry converterRegistry) {
 		converterRegistry.addConverter(new CompletableFutureConverter());
 		converterRegistry.addConverter(new PublisherConverter());
-		if (CompositionDependencyUtils.hasReactorStream()) {
+		if (DependencyUtils.hasReactorStream()) {
 			converterRegistry.addConverter(new ReactorPromiseConverter());
 			converterRegistry.addConverter(new ReactorStreamConverter());
 		}
-		if (CompositionDependencyUtils.hasRxJava1Single()) {
+		if (DependencyUtils.hasRxJava1Single()) {
 			converterRegistry.addConverter(new RxJava1SingleConverter());
 		}
-		if (CompositionDependencyUtils.hasRxJava1()) {
+		if (DependencyUtils.hasRxJava1()) {
 			converterRegistry.addConverter(new RxJava1ObservableConverter());
 		}
 	}
