@@ -101,14 +101,11 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 			ReactiveServerHttpResponse response, HandlerResult result) {
 
 		Object value = result.getValue();
-		HandlerMethod handlerMethod = (HandlerMethod) result.getHandler();
-		MethodParameter returnType = handlerMethod.getReturnValueType(value);
-
 		if (value == null) {
 			return Publishers.empty();
 		}
 
-		ResolvableType type = ResolvableType.forMethodParameter(returnType);
+		ResolvableType type = result.getType();
 		MediaType mediaType = resolveMediaType(request);
 		List<Object> hints = new ArrayList<>();
 		hints.add(UTF_8);
@@ -136,8 +133,7 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 			response.getHeaders().setContentType(mediaType);
 			return response.setBody(outputStream);
 		}
-		String returnTypeName = returnType.getParameterType().getName();
-		return Publishers.error(new IllegalStateException("Return value type '" + returnTypeName +
+		return Publishers.error(new IllegalStateException("Return value type '" + type +
 				"' with media type '" + mediaType + "' not supported"));
 	}
 
