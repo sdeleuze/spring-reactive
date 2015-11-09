@@ -20,6 +20,8 @@ import java.nio.ByteBuffer;
 
 import org.reactivestreams.Publisher;
 
+import org.springframework.reactive.io.Bytes;
+
 /**
  * Represents a "reactive" HTTP output message, consisting of
  * {@linkplain #getHeaders() headers} and the capability to add a
@@ -40,6 +42,6 @@ public interface ReactiveHttpOutputMessage extends HttpMessage {
 	 * @param body the body to use
 	 * @return a publisher that indicates completion
 	 */
-	Publisher<Void> setBody(Publisher<ByteBuffer> body);
+	Publisher<Void> setBody(Publisher<Bytes> body);
 
 }

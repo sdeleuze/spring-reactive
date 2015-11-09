@@ -17,7 +17,6 @@
 package org.springframework.reactive.web.http.servlet;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 
@@ -25,14 +24,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import reactor.io.buffer.Buffer;
 
+import org.springframework.reactive.io.Bytes;
 import org.springframework.util.Assert;
 
 /**
  * @author Arjen Poutsma
  */
-public class ResponseBodySubscriber implements WriteListener, Subscriber<ByteBuffer> {
+public class ResponseBodySubscriber implements WriteListener, Subscriber<Bytes> {
 
 	private static final Log logger = LogFactory.getLog(ResponseBodySubscriber.class);
 
@@ -40,7 +39,7 @@ public class ResponseBodySubscriber implements WriteListener, Subscriber<ByteBuf
 
 	private Subscription subscription;
 
-	private ByteBuffer buffer;
+	private Bytes buffer;
 
 	private volatile boolean subscriberComplete = false;
 
@@ -55,7 +54,7 @@ public class ResponseBodySubscriber implements WriteListener, Subscriber<ByteBuf
 	}
 
 	@Override
-	public void onNext(ByteBuffer bytes) {
+	public void onNext(Bytes bytes) {
 
 		Assert.isNull(buffer);
 
@@ -88,7 +87,7 @@ public class ResponseBodySubscriber implements WriteListener, Subscriber<ByteBuf
 
 		if (ready) {
 			if (this.buffer != null) {
-				output.write(new Buffer(this.buffer).asBytes());
+				output.write(this.buffer.asBytes());
 				this.buffer = null;
 
 				if (!subscriberComplete) {

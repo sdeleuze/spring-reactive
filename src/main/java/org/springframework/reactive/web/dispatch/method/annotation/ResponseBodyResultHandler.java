@@ -17,7 +17,6 @@
 package org.springframework.reactive.web.dispatch.method.annotation;
 
 import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.reactivestreams.Publisher;
@@ -33,6 +32,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.server.ReactiveServerHttpRequest;
 import org.springframework.http.server.ReactiveServerHttpResponse;
 import org.springframework.reactive.codec.encoder.Encoder;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.reactive.web.dispatch.HandlerResult;
 import org.springframework.reactive.web.dispatch.HandlerResultHandler;
 import org.springframework.util.Assert;
@@ -112,7 +112,7 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 		Encoder<?> serializer = resolveSerializer(elementType, mediaType);
 
 		if (serializer != null) {
-			Publisher<ByteBuffer> outputStream = serializer.encode((Publisher)elementStream, type, mediaType);
+			Publisher<Bytes> outputStream = serializer.encode((Publisher)elementStream, type, mediaType);
 			if (mediaType == null || mediaType.isWildcardType() || mediaType.isWildcardSubtype()) {
 				List<MimeType> mimeTypes = serializer.getSupportedMimeTypes();
 				if (!mimeTypes.isEmpty()) {

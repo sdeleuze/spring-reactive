@@ -16,9 +16,9 @@
 
 package org.springframework.http;
 
-import java.nio.ByteBuffer;
-
 import org.reactivestreams.Publisher;
+
+import org.springframework.reactive.io.Bytes;
 
 /**
  * Represents a "reactive" HTTP input message, consisting of
@@ -36,6 +36,6 @@ public interface ReactiveHttpInputMessage extends HttpMessage {
 	 * Return the body of the message as an publisher of {@code ByteBuffer}s.
 	 * @return the body
 	 */
-	Publisher<ByteBuffer> getBody();
+	Publisher<Bytes> getBody();
 
 }

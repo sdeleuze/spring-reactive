@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.reactivestreams.Publisher;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Streams;
 
 import org.springframework.http.HttpStatus;
@@ -31,6 +30,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.ReactiveServerHttpRequest;
 import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.reactive.web.dispatch.DispatcherHandler;
 import org.springframework.reactive.web.dispatch.SimpleHandlerResultHandler;
 import org.springframework.reactive.web.http.AbstractHttpHandlerIntegrationTests;
@@ -105,7 +105,7 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 
 		@Override
 		public Publisher<Void> handle(ReactiveServerHttpRequest request, ReactiveServerHttpResponse response) {
-			return response.setBody(Streams.just(Buffer.wrap("foo").byteBuffer()));
+			return response.setBody(Streams.just(Bytes.from("foo".getBytes())));
 		}
 	}
 
@@ -113,7 +113,7 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 
 		@Override
 		public Publisher<Void> handle(ReactiveServerHttpRequest request, ReactiveServerHttpResponse response) {
-			return response.setBody(Streams.just(Buffer.wrap("bar").byteBuffer()));
+			return response.setBody(Streams.just(Bytes.from("bar".getBytes())));
 		}
 	}
 

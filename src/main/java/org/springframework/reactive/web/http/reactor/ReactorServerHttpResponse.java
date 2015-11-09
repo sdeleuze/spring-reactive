@@ -16,13 +16,13 @@
 
 package org.springframework.reactive.web.http.reactor;
 
-import java.nio.ByteBuffer;
-
 import org.reactivestreams.Publisher;
 import reactor.io.buffer.Buffer;
 import reactor.io.net.http.HttpChannel;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
+
+import org.springframework.reactive.io.Bytes;
 
 /**
  * @author Stephane Maldini
@@ -39,7 +39,7 @@ public class ReactorServerHttpResponse extends PublisherReactorServerHttpRespons
 	}
 
 	@Override
-	public Stream<Void> setBody(Publisher<ByteBuffer> contentPublisher) {
+	public Stream<Void> setBody(Publisher<Bytes> contentPublisher) {
 		return Streams.wrap(super.setBody(contentPublisher));
 	}
 }

@@ -16,7 +16,6 @@
 
 package org.springframework.reactive.codec.encoder;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -34,6 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.reactive.codec.CodecException;
 import org.springframework.reactive.codec.decoder.Jaxb2Decoder;
 import org.springframework.reactive.io.BufferOutputStream;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.MimeType;
@@ -54,7 +54,7 @@ public class Jaxb2Encoder extends AbstractEncoder<Object> {
 	}
 
 	@Override
-	public Publisher<ByteBuffer> encode(Publisher<? extends Object> messageStream, ResolvableType type,
+	public Publisher<Bytes> encode(Publisher<? extends Object> messageStream, ResolvableType type,
 			MimeType mimeType, Object... hints) {
 
 		return Publishers.map(messageStream, value -> {
@@ -66,7 +66,7 @@ public class Jaxb2Encoder extends AbstractEncoder<Object> {
 				marshaller.setProperty(Marshaller.JAXB_ENCODING, StandardCharsets.UTF_8.name());
 				marshaller.marshal(value, outputStream);
 				buffer.flip();
-				return buffer.byteBuffer();
+				return Bytes.from(buffer.byteBuffer());
 			}
 			catch (MarshalException ex) {
 				throw new CodecException("Could not marshal [" + value + "]: " + ex.getMessage(), ex);

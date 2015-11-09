@@ -17,7 +17,6 @@
 package org.springframework.reactive.codec.decoder;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +27,8 @@ import reactor.Publishers;
 import org.springframework.core.ResolvableType;
 import org.springframework.reactive.codec.CodecException;
 import org.springframework.reactive.codec.encoder.JacksonJsonEncoder;
-import org.springframework.reactive.io.ByteBufferInputStream;
+import org.springframework.reactive.io.BytesInputStream;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.util.MimeType;
 
 /**
@@ -41,18 +41,18 @@ public class JacksonJsonDecoder extends AbstractDecoder<Object> {
 
 	private final ObjectMapper mapper;
 
-	private Decoder<ByteBuffer> preProcessor;
+	private Decoder<Bytes> preProcessor;
 
 
 	public JacksonJsonDecoder() {
 		this(new ObjectMapper(), null);
 	}
 
-	public JacksonJsonDecoder(Decoder<ByteBuffer> preProcessor) {
+	public JacksonJsonDecoder(Decoder<Bytes> preProcessor) {
 		this(new ObjectMapper(), preProcessor);
 	}
 
-	public JacksonJsonDecoder(ObjectMapper mapper, Decoder<ByteBuffer> preProcessor) {
+	public JacksonJsonDecoder(ObjectMapper mapper, Decoder<Bytes> preProcessor) {
 		super(new MimeType("application", "json", StandardCharsets.UTF_8),
 				new MimeType("application", "*+json", StandardCharsets.UTF_8));
 		this.mapper = mapper;
@@ -60,15 +60,15 @@ public class JacksonJsonDecoder extends AbstractDecoder<Object> {
 	}
 
 	@Override
-	public Publisher<Object> decode(Publisher<ByteBuffer> inputStream, ResolvableType type,
+	public Publisher<Object> decode(Publisher<Bytes> inputStream, ResolvableType type,
 			MimeType mimeType, Object... hints) {
 
 		ObjectReader reader = this.mapper.readerFor(type.getRawClass());
-		Publisher<ByteBuffer> decodedStream = this.preProcessor == null ? inputStream :
+		Publisher<Bytes> decodedStream = this.preProcessor == null ? inputStream :
 				this.preProcessor.decode(inputStream, type, mimeType, hints);
 		return Publishers.map(decodedStream, chunk -> {
 			try {
-				return reader.readValue(new ByteBufferInputStream(chunk));
+				return reader.readValue(new BytesInputStream(chunk));
 			}
 			catch (IOException e) {
 				throw new CodecException("Error while reading the data", e);

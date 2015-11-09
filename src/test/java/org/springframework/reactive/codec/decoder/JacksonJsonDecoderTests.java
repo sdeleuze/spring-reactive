@@ -16,20 +16,19 @@
 
 package org.springframework.reactive.codec.decoder;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;
 import org.springframework.reactive.codec.Pojo;
+import org.springframework.reactive.io.Bytes;
 
 /**
  * @author Sebastien Deleuze
@@ -46,7 +45,7 @@ public class JacksonJsonDecoderTests {
 
 	@Test
 	public void decode() throws InterruptedException {
-		Stream<ByteBuffer> source = Streams.just(Buffer.wrap("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}").byteBuffer());
+		Stream<Bytes> source = Streams.just(Bytes.from("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}".getBytes()));
 		List<Object> results = Streams.wrap(decoder.decode(source, ResolvableType.forClass(Pojo.class), null))
 				.toList().await();
 		assertEquals(1, results.size());

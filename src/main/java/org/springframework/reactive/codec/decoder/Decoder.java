@@ -23,6 +23,7 @@ import org.reactivestreams.Publisher;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.reactive.codec.encoder.Encoder;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.util.MimeType;
 
 /**
@@ -50,7 +51,7 @@ public interface Decoder<T> {
 	 * @param hints Additional information about how to do decode, optional.
 	 * @return the output stream
 	 */
-	Publisher<T> decode(Publisher<ByteBuffer> inputStream, ResolvableType type, MimeType mimeType, Object... hints);
+	Publisher<T> decode(Publisher<Bytes> inputStream, ResolvableType type, MimeType mimeType, Object... hints);
 
 	/**
 	 * Return the list of {@link MimeType} objects supported by this codec.

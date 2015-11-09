@@ -16,7 +16,6 @@
 
 package org.springframework.reactive.web.http;
 
-import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -24,11 +23,11 @@ import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Streams;
 
 import org.springframework.http.server.ReactiveServerHttpRequest;
 import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.reactive.io.Bytes;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,7 +45,7 @@ public class RandomHandler implements HttpHandler {
 	@Override
 	public Publisher<Void> handle(ReactiveServerHttpRequest request, ReactiveServerHttpResponse response) {
 
-		request.getBody().subscribe(new Subscriber<ByteBuffer>() {
+		request.getBody().subscribe(new Subscriber<Bytes>() {
 			private Subscription s;
 
 			private int requestSize = 0;
@@ -58,14 +57,13 @@ public class RandomHandler implements HttpHandler {
 			}
 
 			@Override
-			public void onNext(ByteBuffer bytes) {
-				requestSize += new Buffer(bytes).limit();
+			public void onNext(Bytes bytes) {
+				requestSize += bytes.limit();
 			}
 
 			@Override
 			public void onError(Throwable t) {
 				logger.error(t);
-
 			}
 
 			@Override
@@ -76,7 +74,7 @@ public class RandomHandler implements HttpHandler {
 		});
 
 		response.getHeaders().setContentLength(RESPONSE_SIZE);
-		return response.setBody(Streams.just(ByteBuffer.wrap(randomBytes())));
+		return response.setBody(Streams.just(Bytes.from(randomBytes())));
 	}
 
 	private byte[] randomBytes() {

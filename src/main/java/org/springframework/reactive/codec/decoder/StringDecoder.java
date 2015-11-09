@@ -16,16 +16,15 @@
 
 package org.springframework.reactive.codec.decoder;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.reactivestreams.Publisher;
 import reactor.Publishers;
-import reactor.io.buffer.Buffer;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.reactive.codec.encoder.StringEncoder;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.util.MimeType;
 
 /**
@@ -49,7 +48,7 @@ public class StringDecoder extends AbstractDecoder<String> {
 	}
 
 	@Override
-	public Publisher<String> decode(Publisher<ByteBuffer> inputStream, ResolvableType type,
+	public Publisher<String> decode(Publisher<Bytes> inputStream, ResolvableType type,
 			MimeType mimeType, Object... hints) {
 
 		Charset charset;
@@ -59,7 +58,7 @@ public class StringDecoder extends AbstractDecoder<String> {
 		else {
 			 charset = DEFAULT_CHARSET;
 		}
-		return Publishers.map(inputStream, chunk -> new String(new Buffer(chunk).asBytes(), charset));
+		return Publishers.map(inputStream, chunk -> new String(chunk.asBytes(), charset));
 	}
 
 }

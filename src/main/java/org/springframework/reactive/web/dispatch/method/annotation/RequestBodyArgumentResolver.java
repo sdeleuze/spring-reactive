@@ -16,7 +16,6 @@
 
 package org.springframework.reactive.web.dispatch.method.annotation;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.reactivestreams.Publisher;
@@ -29,6 +28,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ReactiveServerHttpRequest;
 import org.springframework.reactive.codec.decoder.Decoder;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.reactive.web.dispatch.method.HandlerMethodArgumentResolver;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,7 +61,7 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 	public Publisher<Object> resolveArgument(MethodParameter parameter, ReactiveServerHttpRequest request) {
 		MediaType mediaType = resolveMediaType(request);
 		ResolvableType type = ResolvableType.forMethodParameter(parameter);
-		Publisher<ByteBuffer> inputStream = request.getBody();
+		Publisher<Bytes> inputStream = request.getBody();
 		Publisher<?> elementStream = inputStream;
 		ResolvableType elementType = type.hasGenerics() ? type.getGeneric(0) : type;
 		Decoder<?> deserializer = resolveDeserializer(elementType, mediaType);

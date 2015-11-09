@@ -15,8 +15,6 @@
  */
 package org.springframework.reactive.web.http.reactor;
 
-import java.nio.ByteBuffer;
-
 import org.reactivestreams.Publisher;
 import reactor.Publishers;
 import reactor.io.buffer.Buffer;
@@ -26,6 +24,7 @@ import reactor.io.net.http.model.Status;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.util.Assert;
 
 /**
@@ -67,9 +66,9 @@ public class PublisherReactorServerHttpResponse implements ReactiveServerHttpRes
 	}
 
 	@Override
-	public Publisher<Void> setBody(Publisher<ByteBuffer> contentPublisher) {
+	public Publisher<Void> setBody(Publisher<Bytes> contentPublisher) {
 		applyHeaders();
-		return this.channel.writeWith(Publishers.map(contentPublisher, Buffer::new));
+		return this.channel.writeWith(Publishers.map(contentPublisher, bytes -> new Buffer(bytes.asByteBuffer())));
 	}
 
 	private void applyHeaders() {

@@ -16,15 +16,15 @@
 
 package org.springframework.reactive.codec.encoder;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
+
+import org.springframework.reactive.io.Bytes;
 
 /**
  * @author Sebastien Deleuze
@@ -34,7 +34,7 @@ public class JsonObjectEncoderTests {
 	@Test
 	public void encodeSingleElement() throws InterruptedException {
 		JsonObjectEncoder encoder = new JsonObjectEncoder();
-		Stream<ByteBuffer> source = Streams.just(Buffer.wrap("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}").byteBuffer());
+		Stream<Bytes> source = Streams.just(Bytes.from("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}".getBytes()));
 		List<String> results = Streams.wrap(encoder.encode(source, null, null)).map(chunk -> {
 			byte[] b = new byte[chunk.remaining()];
 			chunk.get(b);
@@ -47,9 +47,9 @@ public class JsonObjectEncoderTests {
 	@Test
 	public void encodeTwoElements() throws InterruptedException {
 		JsonObjectEncoder encoder = new JsonObjectEncoder();
-		Stream<ByteBuffer> source = Streams.just(
-				Buffer.wrap("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}").byteBuffer(),
-				Buffer.wrap("{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}").byteBuffer());
+		Stream<Bytes> source = Streams.just(
+				Bytes.from("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}".getBytes()),
+				Bytes.from("{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}".getBytes()));
 		List<String> results = Streams.wrap(encoder.encode(source, null, null)).map(chunk -> {
 			byte[] b = new byte[chunk.remaining()];
 			chunk.get(b);
@@ -62,10 +62,10 @@ public class JsonObjectEncoderTests {
 	@Test
 	public void encodeThreeElements() throws InterruptedException {
 		JsonObjectEncoder encoder = new JsonObjectEncoder();
-		Stream<ByteBuffer> source = Streams.just(
-				Buffer.wrap("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}").byteBuffer(),
-				Buffer.wrap("{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}").byteBuffer(),
-				Buffer.wrap("{\"foo\": \"foofoofoofoo\", \"bar\": \"barbarbarbar\"}").byteBuffer()
+		Stream<Bytes> source = Streams.just(
+				Bytes.from("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}".getBytes()),
+				Bytes.from("{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}".getBytes()),
+				Bytes.from("{\"foo\": \"foofoofoofoo\", \"bar\": \"barbarbarbar\"}".getBytes())
 		);
 		List<String> results = Streams.wrap(encoder.encode(source, null, null)).map(chunk -> {
 			byte[] b = new byte[chunk.remaining()];

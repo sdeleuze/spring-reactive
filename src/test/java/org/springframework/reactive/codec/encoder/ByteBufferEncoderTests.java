@@ -16,40 +16,39 @@
 
 package org.springframework.reactive.codec.encoder;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;
+import org.springframework.reactive.io.Bytes;
 
 /**
  * @author Sebastien Deleuze
  */
 public class ByteBufferEncoderTests {
 
-	private final ByteBufferEncoder encoder = new ByteBufferEncoder();
+	private final BytesEncoder encoder = new BytesEncoder();
 
 	@Test
 	public void canDecode() {
-		assertTrue(encoder.canEncode(ResolvableType.forClass(ByteBuffer.class), MediaType.TEXT_PLAIN));
+		assertTrue(encoder.canEncode(ResolvableType.forClass(Bytes.class), MediaType.TEXT_PLAIN));
 		assertFalse(encoder.canEncode(ResolvableType.forClass(Integer.class), MediaType.TEXT_PLAIN));
-		assertTrue(encoder.canEncode(ResolvableType.forClass(ByteBuffer.class), MediaType.APPLICATION_JSON));
+		assertTrue(encoder.canEncode(ResolvableType.forClass(Bytes.class), MediaType.APPLICATION_JSON));
 	}
 
 	@Test
 	public void decode() throws InterruptedException {
-		ByteBuffer fooBuffer = Buffer.wrap("foo").byteBuffer();
-		ByteBuffer barBuffer = Buffer.wrap("bar").byteBuffer();
-		Stream<ByteBuffer> source = Streams.just(fooBuffer, barBuffer);
-		List<ByteBuffer> results = Streams.wrap(encoder.encode(source,
-				ResolvableType.forClassWithGenerics(Publisher.class, ByteBuffer.class), null)).toList().await();
+		Bytes fooBuffer = Bytes.from("foo".getBytes());
+		Bytes barBuffer = Bytes.from("bar".getBytes());
+		Stream<Bytes> source = Streams.just(fooBuffer, barBuffer);
+		List<Bytes> results = Streams.wrap(encoder.encode(source,
+				ResolvableType.forClassWithGenerics(Publisher.class, Bytes.class), null)).toList().await();
 		assertEquals(2, results.size());
 		assertEquals(fooBuffer, results.get(0));
 		assertEquals(barBuffer, results.get(1));

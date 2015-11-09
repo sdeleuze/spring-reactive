@@ -16,33 +16,32 @@
 
 package org.springframework.reactive.codec.encoder;
 
-import java.nio.ByteBuffer;
-
 import org.reactivestreams.Publisher;
 
 import org.springframework.core.ResolvableType;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
 /**
  * @author Sebastien Deleuze
  */
-public class ByteBufferEncoder extends AbstractEncoder<ByteBuffer> {
+public class BytesEncoder extends AbstractEncoder<Bytes> {
 
-	public ByteBufferEncoder() {
+	public BytesEncoder() {
 		super(MimeTypeUtils.ALL);
 	}
 
 	@Override
 	public boolean canEncode(ResolvableType type, MimeType mimeType, Object... hints) {
 		return super.canEncode(type, mimeType, hints)
-				&& ByteBuffer.class.isAssignableFrom(type.getRawClass());
+				&& Bytes.class.isAssignableFrom(type.getRawClass());
 	}
 
 	@Override
-	public Publisher<ByteBuffer> encode(Publisher<? extends ByteBuffer> inputStream, ResolvableType type,
+	public Publisher<Bytes> encode(Publisher<? extends Bytes> inputStream, ResolvableType type,
 			MimeType mimeType, Object... hints) {
 
-		return (Publisher<ByteBuffer>)inputStream;
+		return (Publisher<Bytes>)inputStream;
 	}
 }

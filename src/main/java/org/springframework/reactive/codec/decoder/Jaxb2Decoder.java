@@ -16,7 +16,6 @@
 
 package org.springframework.reactive.codec.decoder;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.xml.bind.JAXBContext;
@@ -40,7 +39,8 @@ import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;
 import org.springframework.reactive.codec.CodecException;
 import org.springframework.reactive.codec.encoder.Jaxb2Encoder;
-import org.springframework.reactive.io.ByteBufferPublisherInputStream;
+import org.springframework.reactive.io.BytesPublisherInputStream;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 
@@ -59,12 +59,12 @@ public class Jaxb2Decoder extends AbstractDecoder<Object> {
 	}
 
 	@Override
-	public Publisher<Object> decode(Publisher<ByteBuffer> inputStream, ResolvableType type,
+	public Publisher<Object> decode(Publisher<Bytes> inputStream, ResolvableType type,
 			MimeType mimeType, Object... hints) {
 
 		Class<?> outputClass = type.getRawClass();
 		try {
-			Source source = processSource(new StreamSource(new ByteBufferPublisherInputStream(inputStream)));
+			Source source = processSource(new StreamSource(new BytesPublisherInputStream(inputStream)));
 			Unmarshaller unmarshaller = createUnmarshaller(outputClass);
 			if (outputClass.isAnnotationPresent(XmlRootElement.class)) {
 				return Publishers.just(unmarshaller.unmarshal(source));

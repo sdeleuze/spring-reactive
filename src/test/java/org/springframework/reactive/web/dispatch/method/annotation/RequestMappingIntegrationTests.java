@@ -47,10 +47,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.reactive.codec.encoder.ByteBufferEncoder;
+import org.springframework.reactive.codec.encoder.BytesEncoder;
 import org.springframework.reactive.codec.encoder.JacksonJsonEncoder;
 import org.springframework.reactive.codec.encoder.JsonObjectEncoder;
 import org.springframework.reactive.codec.encoder.StringEncoder;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.reactive.web.dispatch.DispatcherHandler;
 import org.springframework.reactive.web.dispatch.SimpleHandlerResultHandler;
 import org.springframework.reactive.web.http.AbstractHttpHandlerIntegrationTests;
@@ -290,7 +291,7 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 		@Bean
 		public ResponseBodyResultHandler responseBodyResultHandler() {
 			return new ResponseBodyResultHandler(Arrays.asList(
-					new ByteBufferEncoder(), new StringEncoder(), new JacksonJsonEncoder(new JsonObjectEncoder())),
+					new BytesEncoder(), new StringEncoder(), new JacksonJsonEncoder(new JsonObjectEncoder())),
 					conversionService());
 		}
 
@@ -338,7 +339,7 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 
 		@RequestMapping("/raw")
 		@ResponseBody
-		public Publisher<ByteBuffer> rawResponseBody() {
+		public Publisher<Bytes> rawResponseBody() {
 			JacksonJsonEncoder encoder = new JacksonJsonEncoder();
 			return encoder.encode(Streams.just(new Person("Robert")),
 					ResolvableType.forClass(Person.class), MediaType.APPLICATION_JSON);
@@ -346,8 +347,8 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 
 		@RequestMapping("/raw-observable")
 		@ResponseBody
-		public Observable<ByteBuffer> rawObservableResponseBody() {
-			return Observable.just(Buffer.wrap("Hello!").byteBuffer());
+		public Observable<Bytes> rawObservableResponseBody() {
+			return Observable.just(Bytes.from("Hello!".getBytes()));
 		}
 
 		@RequestMapping("/single")

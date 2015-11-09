@@ -18,7 +18,6 @@ package org.springframework.reactive.web.dispatch.method.annotation;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +26,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.reactive.io.Bytes;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -121,7 +121,7 @@ public class RequestMappingHandlerMappingTests {
 		}
 
 		@Override
-		public Publisher<ByteBuffer> getBody() {
+		public Publisher<Bytes> getBody() {
 			return null;
 		}
 

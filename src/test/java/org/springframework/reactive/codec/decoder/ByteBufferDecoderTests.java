@@ -22,19 +22,19 @@ import java.util.List;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;
+import org.springframework.reactive.io.Bytes;
 
 /**
  * @author Sebastien Deleuze
  */
 public class ByteBufferDecoderTests {
 
-	private final ByteBufferDecoder decoder = new ByteBufferDecoder();
+	private final BytesDecoder decoder = new BytesDecoder();
 
 	@Test
 	public void canDecode() {
@@ -45,11 +45,11 @@ public class ByteBufferDecoderTests {
 
 	@Test
 	public void decode() throws InterruptedException {
-		ByteBuffer fooBuffer = Buffer.wrap("foo").byteBuffer();
-		ByteBuffer barBuffer = Buffer.wrap("bar").byteBuffer();
-		Stream<ByteBuffer> source = Streams.just(fooBuffer, barBuffer);
-		List<ByteBuffer> results = Streams.wrap(decoder.decode(source,
-				ResolvableType.forClassWithGenerics(Publisher.class, ByteBuffer.class), null)).toList().await();
+		Bytes fooBuffer = Bytes.from("foo".getBytes());
+		Bytes barBuffer = Bytes.from("bar".getBytes());
+		Stream<Bytes> source = Streams.just(fooBuffer, barBuffer);
+		List<Bytes> results = Streams.wrap(decoder.decode(source,
+				ResolvableType.forClassWithGenerics(Publisher.class, Bytes.class), null)).toList().await();
 		assertEquals(2, results.size());
 		assertEquals(fooBuffer, results.get(0));
 		assertEquals(barBuffer, results.get(1));

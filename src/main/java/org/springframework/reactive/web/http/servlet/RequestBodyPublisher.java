@@ -17,7 +17,6 @@
 package org.springframework.reactive.web.http.servlet;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
@@ -28,12 +27,13 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import org.springframework.reactive.io.Bytes;
 import org.springframework.reactive.util.DemandCounter;
 
 /**
  * @author Arjen Poutsma
  */
-public class RequestBodyPublisher implements ReadListener, Publisher<ByteBuffer> {
+public class RequestBodyPublisher implements ReadListener, Publisher<Bytes> {
 
 	private static final Log logger = LogFactory.getLog(RequestBodyPublisher.class);
 
@@ -43,7 +43,7 @@ public class RequestBodyPublisher implements ReadListener, Publisher<ByteBuffer>
 
 	private final DemandCounter demand = new DemandCounter();
 
-	private Subscriber<? super ByteBuffer> subscriber;
+	private Subscriber<? super Bytes> subscriber;
 
 	private boolean stalled;
 
@@ -55,7 +55,7 @@ public class RequestBodyPublisher implements ReadListener, Publisher<ByteBuffer>
 	}
 
 	@Override
-	public void subscribe(Subscriber<? super ByteBuffer> subscriber) {
+	public void subscribe(Subscriber<? super Bytes> subscriber) {
 		if (subscriber == null) {
 			throw new NullPointerException();
 		}
@@ -101,7 +101,7 @@ public class RequestBodyPublisher implements ReadListener, Publisher<ByteBuffer>
 
 //				logger.debug("Next: " + new String(copy, UTF_8));
 
-				this.subscriber.onNext(ByteBuffer.wrap(copy));
+				this.subscriber.onNext(Bytes.from(copy));
 
 			}
 		}
