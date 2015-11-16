@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
+import org.springframework.core.io.Bytes;
 import org.springframework.util.Assert;
 
 import io.undertow.connector.PooledByteBuffer;
@@ -38,7 +39,7 @@ import reactor.core.support.BackpressureUtils;
 /**
  * @author Marek Hawrylczak
  */
-class RequestBodyPublisher implements Publisher<ByteBuffer> {
+class RequestBodyPublisher implements Publisher<Bytes> {
 
 	private static final AtomicLongFieldUpdater<RequestBodySubscription> DEMAND =
 			AtomicLongFieldUpdater.newUpdater(RequestBodySubscription.class, "demand");
@@ -46,7 +47,7 @@ class RequestBodyPublisher implements Publisher<ByteBuffer> {
 
 	private final HttpServerExchange exchange;
 
-	private Subscriber<? super ByteBuffer> subscriber;
+	private Subscriber<? super Bytes> subscriber;
 
 
 	public RequestBodyPublisher(HttpServerExchange exchange) {
@@ -56,7 +57,7 @@ class RequestBodyPublisher implements Publisher<ByteBuffer> {
 
 
 	@Override
-	public void subscribe(Subscriber<? super ByteBuffer> subscriber) {
+	public void subscribe(Subscriber<? super Bytes> subscriber) {
 		if (subscriber == null) {
 			throw SpecificationExceptions.spec_2_13_exception();
 		}
@@ -156,7 +157,7 @@ class RequestBodyPublisher implements Publisher<ByteBuffer> {
 					}
 					else if (count == -1) {
 						if (buffer.position() > 0) {
-							doOnNext(buffer);
+							doOnNext(Bytes.from(buffer));
 						}
 						doOnComplete();
 					}
@@ -165,7 +166,7 @@ class RequestBodyPublisher implements Publisher<ByteBuffer> {
 							if (this.demand == 0) {
 								this.channel.suspendReads();
 							}
-							doOnNext(buffer);
+							doOnNext(Bytes.from(buffer));
 							if (this.demand > 0) {
 								scheduleNextMessage();
 							}
@@ -179,7 +180,7 @@ class RequestBodyPublisher implements Publisher<ByteBuffer> {
 			}
 		}
 
-		private void doOnNext(ByteBuffer buffer) {
+		private void doOnNext(Bytes buffer) {
 			this.draining = false;
 			buffer.flip();
 			subscriber.onNext(buffer);
@@ -221,7 +222,7 @@ class RequestBodyPublisher implements Publisher<ByteBuffer> {
 					}
 					else if (count == -1) {
 						if (buffer.position() > 0) {
-							doOnNext(buffer);
+							doOnNext(Bytes.from(buffer));
 						}
 						doOnComplete();
 					}
@@ -230,7 +231,7 @@ class RequestBodyPublisher implements Publisher<ByteBuffer> {
 							if (this.demand == 0) {
 								channel.suspendReads();
 							}
-							doOnNext(buffer);
+							doOnNext(Bytes.from(buffer));
 							if (this.demand > 0) {
 								scheduleNextMessage();
 							}

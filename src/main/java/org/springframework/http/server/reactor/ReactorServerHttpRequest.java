@@ -16,12 +16,12 @@
 
 package org.springframework.http.server.reactor;
 
-import java.nio.ByteBuffer;
-
 import reactor.io.buffer.Buffer;
 import reactor.io.net.http.HttpChannel;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
+
+import org.springframework.core.io.Bytes;
 
 /**
  * @author Stephane Maldini
@@ -33,7 +33,7 @@ public class ReactorServerHttpRequest extends PublisherReactorServerHttpRequest 
 	}
 
 	@Override
-	public Stream<ByteBuffer> getBody() {
+	public Stream<Bytes> getBody() {
 		return Streams.wrap(super.getBody());
 	}
 

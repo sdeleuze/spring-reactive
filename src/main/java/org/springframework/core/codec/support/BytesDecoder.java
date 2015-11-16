@@ -21,16 +21,16 @@ import java.nio.ByteBuffer;
 import org.reactivestreams.Publisher;
 
 import org.springframework.core.ResolvableType;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
 /**
  * @author Sebastien Deleuze
  */
-public class ByteBufferDecoder extends AbstractDecoder<ByteBuffer> {
+public class BytesDecoder extends AbstractDecoder<Bytes> {
 
-
-	public ByteBufferDecoder() {
+	public BytesDecoder() {
 		super(MimeTypeUtils.ALL);
 	}
 
@@ -42,7 +42,7 @@ public class ByteBufferDecoder extends AbstractDecoder<ByteBuffer> {
 	}
 
 	@Override
-	public Publisher<ByteBuffer> decode(Publisher<ByteBuffer> inputStream, ResolvableType type,
+	public Publisher<Bytes> decode(Publisher<Bytes> inputStream, ResolvableType type,
 			MimeType mimeType, Object... hints) {
 
 		return inputStream;

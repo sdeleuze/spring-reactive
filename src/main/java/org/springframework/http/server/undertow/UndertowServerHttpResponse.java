@@ -16,13 +16,13 @@
 
 package org.springframework.http.server.undertow;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.Assert;
 
 import io.undertow.server.HttpServerExchange;
@@ -59,7 +59,7 @@ class UndertowServerHttpResponse implements ReactiveServerHttpResponse {
 
 
 	@Override
-	public Publisher<Void> setBody(Publisher<ByteBuffer> bodyPublisher) {
+	public Publisher<Void> setBody(Publisher<Bytes> bodyPublisher) {
 		applyHeaders();
 		return (subscriber -> bodyPublisher.subscribe(bodySubscriber));
 	}

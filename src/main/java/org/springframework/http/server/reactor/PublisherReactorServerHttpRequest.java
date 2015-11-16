@@ -17,7 +17,6 @@ package org.springframework.http.server.reactor;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 
 import org.reactivestreams.Publisher;
 import reactor.Publishers;
@@ -27,6 +26,7 @@ import reactor.io.net.http.HttpChannel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.Assert;
 
 /**
@@ -74,8 +74,8 @@ public class PublisherReactorServerHttpRequest implements ReactiveServerHttpRequ
 	}
 
 	@Override
-	public Publisher<ByteBuffer> getBody() {
-		return Publishers.map(channel.input(), Buffer::byteBuffer);
+	public Publisher<Bytes> getBody() {
+		return Publishers.map(channel.input(), buffer -> Bytes.from(buffer.byteBuffer()));
 	}
 
 }

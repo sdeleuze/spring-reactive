@@ -16,7 +16,6 @@
 
 package org.springframework.http.server.servlet31;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +28,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.Assert;
 
 /**
@@ -73,7 +73,7 @@ public class Servlet31ServerHttpResponse implements ReactiveServerHttpResponse {
 	}
 
 	@Override
-	public Publisher<Void> setBody(final Publisher<ByteBuffer> contentPublisher) {
+	public Publisher<Void> setBody(final Publisher<Bytes> contentPublisher) {
 		applyHeaders();
 		return (s -> contentPublisher.subscribe(subscriber));
 	}

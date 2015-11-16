@@ -16,17 +16,16 @@
 
 package org.springframework.reactive.codec.decoder;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 
 import org.springframework.core.codec.support.JsonObjectDecoder;
+import org.springframework.core.io.Bytes;
 
 /**
  * @author Sebastien Deleuze
@@ -36,7 +35,7 @@ public class JsonObjectDecoderTests {
 	@Test
 	public void decodeSingleChunkToJsonObject() throws InterruptedException {
 		JsonObjectDecoder decoder = new JsonObjectDecoder();
-		Stream<ByteBuffer> source = Streams.just(Buffer.wrap("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}").byteBuffer());
+		Stream<Bytes> source = Streams.just(Bytes.from("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}".getBytes()));
 		List<String> results = Streams.wrap(decoder.decode(source, null, null)).map(chunk -> {
 					byte[] b = new byte[chunk.remaining()];
 					chunk.get(b);
@@ -49,7 +48,7 @@ public class JsonObjectDecoderTests {
 	@Test
 	public void decodeMultipleChunksToJsonObject() throws InterruptedException {
 		JsonObjectDecoder decoder = new JsonObjectDecoder();
-		Stream<ByteBuffer> source = Streams.just(Buffer.wrap("{\"foo\": \"foofoo\"").byteBuffer(), Buffer.wrap(", \"bar\": \"barbar\"}").byteBuffer());
+		Stream<Bytes> source = Streams.just(Bytes.from("{\"foo\": \"foofoo\"".getBytes()), Bytes.from(", \"bar\": \"barbar\"}".getBytes()));
 		List<String> results = Streams.wrap(decoder.decode(source, null, null)).map(chunk -> {
 					byte[] b = new byte[chunk.remaining()];
 					chunk.get(b);
@@ -62,7 +61,7 @@ public class JsonObjectDecoderTests {
 	@Test
 	public void decodeSingleChunkToArray() throws InterruptedException {
 		JsonObjectDecoder decoder = new JsonObjectDecoder();
-		Stream<ByteBuffer> source = Streams.just(Buffer.wrap("[{\"foo\": \"foofoo\", \"bar\": \"barbar\"},{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}]").byteBuffer());
+		Stream<Bytes> source = Streams.just(Bytes.from("[{\"foo\": \"foofoo\", \"bar\": \"barbar\"},{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}]".getBytes()));
 		List<String> results = Streams.wrap(decoder.decode(source, null, null)).map(chunk -> {
 					byte[] b = new byte[chunk.remaining()];
 					chunk.get(b);
@@ -76,7 +75,7 @@ public class JsonObjectDecoderTests {
 	@Test
 	public void decodeMultipleChunksToArray() throws InterruptedException {
 		JsonObjectDecoder decoder = new JsonObjectDecoder();
-		Stream<ByteBuffer> source = Streams.just(Buffer.wrap("[{\"foo\": \"foofoo\", \"bar\"").byteBuffer(), Buffer.wrap(": \"barbar\"},{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}]").byteBuffer());
+		Stream<Bytes> source = Streams.just(Bytes.from("[{\"foo\": \"foofoo\", \"bar\"".getBytes()), Bytes.from(": \"barbar\"},{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}]".getBytes()));
 		List<String> results = Streams.wrap(decoder.decode(source, null, null)).map(chunk -> {
 					byte[] b = new byte[chunk.remaining()];
 					chunk.get(b);

@@ -22,7 +22,7 @@ import java.util.List;
 import org.reactivestreams.Publisher;
 
 import org.springframework.core.ResolvableType;
-import org.springframework.core.codec.Encoder;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.MimeType;
 
 /**
@@ -50,7 +50,7 @@ public interface Decoder<T> {
 	 * @param hints Additional information about how to do decode, optional.
 	 * @return the output stream
 	 */
-	Publisher<T> decode(Publisher<ByteBuffer> inputStream, ResolvableType type,
+	Publisher<T> decode(Publisher<Bytes> inputStream, ResolvableType type,
 			MimeType mimeType, Object... hints);
 
 	/**

@@ -36,11 +36,13 @@ import static org.xnio.ChannelListeners.closingChannelExceptionHandler;
 import static org.xnio.ChannelListeners.flushingChannelListener;
 import static org.xnio.IoUtils.safeClose;
 
+import org.springframework.core.io.Bytes;
+
 /**
  * @author Marek Hawrylczak
  * @author Rossen Stoyanchev
  */
-class ResponseBodySubscriber extends BaseSubscriber<ByteBuffer>
+class ResponseBodySubscriber extends BaseSubscriber<Bytes>
 		implements ChannelListener<StreamSinkChannel> {
 
 	private static final Log logger = LogFactory.getLog(ResponseBodySubscriber.class);
@@ -73,7 +75,7 @@ class ResponseBodySubscriber extends BaseSubscriber<ByteBuffer>
 	}
 
 	@Override
-	public void onNext(ByteBuffer buffer) {
+	public void onNext(Bytes buffer) {
 		super.onNext(buffer);
 
 		if (this.responseChannel == null) {
@@ -84,12 +86,12 @@ class ResponseBodySubscriber extends BaseSubscriber<ByteBuffer>
 		try {
 			int c;
 			do {
-				c = this.responseChannel.write(buffer);
+				c = this.responseChannel.write(buffer.asByteBuffer());
 			} while (buffer.hasRemaining() && c > 0);
 
 			if (buffer.hasRemaining()) {
 				this.writing.incrementAndGet();
-				enqueue(buffer);
+				enqueue(buffer.asByteBuffer());
 				this.responseChannel.getWriteSetter().set(this);
 				this.responseChannel.resumeWrites();
 			}

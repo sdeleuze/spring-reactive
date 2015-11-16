@@ -16,7 +16,6 @@
 
 package org.springframework.web.reactive.method.annotation;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.reactivestreams.Publisher;
@@ -28,6 +27,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ReactiveServerHttpRequest;
 import org.springframework.core.codec.Decoder;
+import org.springframework.core.io.Bytes;
 import org.springframework.web.reactive.method.HandlerMethodArgumentResolver;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -63,7 +63,7 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 			mediaType = MediaType.APPLICATION_OCTET_STREAM;
 		}
 		ResolvableType type = ResolvableType.forMethodParameter(parameter);
-		Publisher<ByteBuffer> body = request.getBody();
+		Publisher<Bytes> body = request.getBody();
 		Publisher<?> elementStream = body;
 		ResolvableType elementType = type.hasGenerics() ? type.getGeneric(0) : type;
 

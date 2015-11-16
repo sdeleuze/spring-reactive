@@ -16,7 +16,6 @@
 
 package org.springframework.reactive.codec.decoder;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -24,13 +23,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.core.codec.support.StringDecoder;
 import org.springframework.http.MediaType;
+import org.springframework.core.io.Bytes;
 
 /**
  * @author Sebastien Deleuze
@@ -48,7 +47,7 @@ public class StringDecoderTests {
 
 	@Test
 	public void decode() throws InterruptedException {
-		Stream<ByteBuffer> source = Streams.just(Buffer.wrap("foo").byteBuffer(), Buffer.wrap("bar").byteBuffer());
+		Stream<Bytes> source = Streams.just(Bytes.from("foo".getBytes()), Bytes.from("bar".getBytes()));
 		List<String> results = Streams.wrap(decoder.decode(source,
 				ResolvableType.forClassWithGenerics(Publisher.class, String.class), null)).toList().await();
 		assertEquals(2, results.size());

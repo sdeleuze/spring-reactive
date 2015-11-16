@@ -28,7 +28,8 @@ import reactor.rx.Streams;
 
 import org.springframework.http.MediaType;
 import org.springframework.util.BufferOutputStream;
-import org.springframework.util.ByteBufferPublisherInputStream;
+import org.springframework.util.BytesPublisherInputStream;
+import org.springframework.core.io.Bytes;
 
 import static org.junit.Assert.fail;
 
@@ -49,7 +50,7 @@ public class XmlHandler implements ReactiveHttpHandler {
 
 			Runnable r = () -> {
 				try {
-					ByteBufferPublisherInputStream bis = new ByteBufferPublisherInputStream(request.getBody());
+					BytesPublisherInputStream bis = new BytesPublisherInputStream(request.getBody());
 
 					XmlHandlerIntegrationTests.Person johnDoe =
 						(XmlHandlerIntegrationTests.Person) unmarshaller.unmarshal(bis);
@@ -73,7 +74,7 @@ public class XmlHandler implements ReactiveHttpHandler {
 			bos.close();
 			buffer.flip();
 
-			return response.setBody(Streams.just(buffer.byteBuffer()));
+			return response.setBody(Streams.just(Bytes.from(buffer.byteBuffer())));
 		}
 		catch (Exception ex) {
 			logger.error(ex, ex);

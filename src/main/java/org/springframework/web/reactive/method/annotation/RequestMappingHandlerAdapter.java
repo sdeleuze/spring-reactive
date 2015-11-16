@@ -28,7 +28,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.server.ReactiveServerHttpRequest;
 import org.springframework.http.server.ReactiveServerHttpResponse;
-import org.springframework.core.codec.support.ByteBufferDecoder;
+import org.springframework.core.codec.support.BytesDecoder;
 import org.springframework.core.codec.Decoder;
 import org.springframework.core.codec.support.JacksonJsonDecoder;
 import org.springframework.core.codec.support.JsonObjectDecoder;
@@ -72,7 +72,7 @@ public class RequestMappingHandlerAdapter implements HandlerAdapter, Initializin
 	public void afterPropertiesSet() throws Exception {
 		if (this.argumentResolvers == null) {
 
-			List<Decoder<?>> decoders = Arrays.asList(new ByteBufferDecoder(),
+			List<Decoder<?>> decoders = Arrays.asList(new BytesDecoder(),
 					new StringDecoder(), new JacksonJsonDecoder(new JsonObjectDecoder()));
 
 			this.argumentResolvers = new ArrayList<>();

@@ -18,7 +18,6 @@ package org.springframework.web.reactive.method.annotation;
 
 
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +25,6 @@ import java.util.concurrent.CompletableFuture;
 
 import org.junit.Test;
 import org.reactivestreams.Publisher;
-import reactor.io.buffer.Buffer;
 import reactor.rx.Promise;
 import reactor.rx.Promises;
 import reactor.rx.Stream;
@@ -47,10 +45,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.core.codec.support.ByteBufferEncoder;
+import org.springframework.core.codec.support.BytesEncoder;
 import org.springframework.core.codec.support.JacksonJsonEncoder;
 import org.springframework.core.codec.support.JsonObjectEncoder;
 import org.springframework.core.codec.support.StringEncoder;
+import org.springframework.core.io.Bytes;
 import org.springframework.web.reactive.DispatcherHandler;
 import org.springframework.web.reactive.handler.SimpleHandlerResultHandler;
 import org.springframework.http.server.AbstractHttpHandlerIntegrationTests;
@@ -290,7 +289,7 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 		@Bean
 		public ResponseBodyResultHandler responseBodyResultHandler() {
 			return new ResponseBodyResultHandler(Arrays.asList(
-					new ByteBufferEncoder(), new StringEncoder(), new JacksonJsonEncoder(new JsonObjectEncoder())),
+					new BytesEncoder(), new StringEncoder(), new JacksonJsonEncoder(new JsonObjectEncoder())),
 					conversionService());
 		}
 
@@ -338,7 +337,7 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 
 		@RequestMapping("/raw")
 		@ResponseBody
-		public Publisher<ByteBuffer> rawResponseBody() {
+		public Publisher<Bytes> rawResponseBody() {
 			JacksonJsonEncoder encoder = new JacksonJsonEncoder();
 			return encoder.encode(Streams.just(new Person("Robert")),
 					ResolvableType.forClass(Person.class), MediaType.APPLICATION_JSON);
@@ -346,8 +345,8 @@ public class RequestMappingIntegrationTests extends AbstractHttpHandlerIntegrati
 
 		@RequestMapping("/raw-observable")
 		@ResponseBody
-		public Observable<ByteBuffer> rawObservableResponseBody() {
-			return Observable.just(Buffer.wrap("Hello!").byteBuffer());
+		public Observable<Bytes> rawObservableResponseBody() {
+			return Observable.just(Bytes.from("Hello!".getBytes()));
 		}
 
 		@RequestMapping("/single")

@@ -16,7 +16,6 @@
 
 package org.springframework.core.codec.support;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
@@ -25,9 +24,9 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import reactor.core.subscriber.SubscriberBarrier;
 import reactor.core.support.BackpressureUtils;
-import reactor.io.buffer.Buffer;
 
 import org.springframework.core.ResolvableType;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.MimeType;
 
 import static reactor.Publishers.lift;
@@ -41,7 +40,7 @@ import static reactor.Publishers.lift;
  *
  * @see JsonObjectDecoder
  */
-public class JsonObjectEncoder extends AbstractEncoder<ByteBuffer> {
+public class JsonObjectEncoder extends AbstractEncoder<Bytes> {
 
 	public JsonObjectEncoder() {
 		super(new MimeType("application", "json", StandardCharsets.UTF_8),
@@ -49,7 +48,7 @@ public class JsonObjectEncoder extends AbstractEncoder<ByteBuffer> {
 	}
 
 	@Override
-	public Publisher<ByteBuffer> encode(Publisher<? extends ByteBuffer> messageStream,
+	public Publisher<Bytes> encode(Publisher<? extends Bytes> messageStream,
 			ResolvableType type, MimeType mimeType, Object... hints) {
 
 		//noinspection Convert2MethodRef
@@ -57,7 +56,7 @@ public class JsonObjectEncoder extends AbstractEncoder<ByteBuffer> {
 	}
 
 
-	private static class JsonEncoderBarrier extends SubscriberBarrier<ByteBuffer, ByteBuffer> {
+	private static class JsonEncoderBarrier extends SubscriberBarrier<Bytes, Bytes> {
 
 		@SuppressWarnings("rawtypes")
 		static final AtomicLongFieldUpdater<JsonEncoderBarrier> REQUESTED =
@@ -67,7 +66,7 @@ public class JsonObjectEncoder extends AbstractEncoder<ByteBuffer> {
 				AtomicIntegerFieldUpdater.newUpdater(JsonEncoderBarrier.class, "terminated");
 
 
-		private ByteBuffer prev = null;
+		private Bytes prev = null;
 
 		private long count = 0;
 
@@ -76,7 +75,7 @@ public class JsonObjectEncoder extends AbstractEncoder<ByteBuffer> {
 		private volatile int terminated;
 
 
-		public JsonEncoderBarrier(Subscriber<? super ByteBuffer> subscriber) {
+		public JsonEncoderBarrier(Subscriber<? super Bytes> subscriber) {
 			super(subscriber);
 		}
 
@@ -93,7 +92,7 @@ public class JsonObjectEncoder extends AbstractEncoder<ByteBuffer> {
 		}
 
 		@Override
-		protected void doNext(ByteBuffer next) {
+		protected void doNext(Bytes next) {
 			this.count++;
 			if (this.count == 1) {
 				this.prev = next;
@@ -101,29 +100,29 @@ public class JsonObjectEncoder extends AbstractEncoder<ByteBuffer> {
 				return;
 			}
 
-			ByteBuffer tmp = this.prev;
+			Bytes tmp = this.prev;
 			this.prev = next;
-			Buffer buffer = new Buffer();
+			Bytes buffer = Bytes.create();
 			if (this.count == 2) {
-				buffer.append("[");
+				buffer.append("[".getBytes());
 			}
 			buffer.append(tmp);
-			buffer.append(",");
+			buffer.append(",".getBytes());
 			buffer.flip();
 
 			BackpressureUtils.getAndSub(REQUESTED, this, 1L);
-			downstream().onNext(buffer.byteBuffer());
+			downstream().onNext(buffer);
 		}
 
 		protected void drainLast(){
 			if(BackpressureUtils.getAndSub(REQUESTED, this, 1L) > 0) {
-				Buffer buffer = new Buffer();
+				Bytes buffer = Bytes.create();
 				buffer.append(this.prev);
 				if (this.count > 1) {
-					buffer.append("]");
+					buffer.append("]".getBytes());
 				}
 				buffer.flip();
-				downstream().onNext(buffer.byteBuffer());
+				downstream().onNext(buffer);
 				super.doComplete();
 			}
 		}

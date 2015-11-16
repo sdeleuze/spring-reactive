@@ -16,7 +16,6 @@
 
 package org.springframework.core.codec.support;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +28,7 @@ import reactor.Publishers;
 import reactor.fn.Function;
 
 import org.springframework.core.ResolvableType;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.MimeType;
 
 /**
@@ -42,10 +42,12 @@ import org.springframework.util.MimeType;
  * Based on <a href=https://github.com/netty/netty/blob/master/codec/src/main/java/io/netty/handler/codec/json/JsonObjectDecoder.java">
  * Netty {@code JsonObjectDecoder}</a>
  *
+ * TODO Use {@link Bytes} instead of {@code ByteBuf}
+ *
  * @author Sebastien Deleuze
  * @see JsonObjectEncoder
  */
-public class JsonObjectDecoder extends AbstractDecoder<ByteBuffer> {
+public class JsonObjectDecoder extends AbstractDecoder<Bytes> {
 
 	private static final int ST_CORRUPTED = -1;
 
@@ -95,10 +97,10 @@ public class JsonObjectDecoder extends AbstractDecoder<ByteBuffer> {
 	}
 
 	@Override
-	public Publisher<ByteBuffer> decode(Publisher<ByteBuffer> inputStream, ResolvableType type,
+	public Publisher<Bytes> decode(Publisher<Bytes> inputStream, ResolvableType type,
 			MimeType mimeType, Object... hints) {
 
-		return Publishers.flatMap(inputStream, new Function<ByteBuffer, Publisher<? extends ByteBuffer>>() {
+		return Publishers.flatMap(inputStream, new Function<Bytes, Publisher<? extends Bytes>>() {
 
 			int openBraces;
 			int index;
@@ -108,14 +110,14 @@ public class JsonObjectDecoder extends AbstractDecoder<ByteBuffer> {
 			Integer writerIndex;
 
 			@Override
-			public Publisher<? extends ByteBuffer> apply(ByteBuffer b) {
-				List<ByteBuffer> chunks = new ArrayList<>();
+			public Publisher<? extends Bytes> apply(Bytes b) {
+				List<Bytes> chunks = new ArrayList<>();
 				if (this.input == null) {
-					this.input = Unpooled.copiedBuffer(b);
+					this.input = Unpooled.copiedBuffer(b.asBytes());
 					this.writerIndex = this.input.writerIndex();
 				}
 				else {
-					this.input = Unpooled.copiedBuffer(this.input, Unpooled.copiedBuffer(b));
+					this.input = Unpooled.copiedBuffer(this.input, Unpooled.copiedBuffer(b.asBytes()));
 					this.writerIndex = this.input.writerIndex();
 				}
 				if (this.state == ST_CORRUPTED) {
@@ -140,7 +142,7 @@ public class JsonObjectDecoder extends AbstractDecoder<ByteBuffer> {
 							ByteBuf json = extractObject(this.input, this.input.readerIndex(),
 									this.index + 1 - this.input.readerIndex());
 							if (json != null) {
-								chunks.add(json.nioBuffer());
+								chunks.add(Bytes.from(json.nioBuffer()));
 							}
 
 							// The JSON object/array was extracted => discard the bytes from
@@ -174,7 +176,7 @@ public class JsonObjectDecoder extends AbstractDecoder<ByteBuffer> {
 									idxNoSpaces + 1 - this.input.readerIndex());
 
 							if (json != null) {
-								chunks.add(json.nioBuffer());
+								chunks.add(Bytes.from(json.nioBuffer()));
 							}
 
 							this.input.readerIndex(this.index + 1);

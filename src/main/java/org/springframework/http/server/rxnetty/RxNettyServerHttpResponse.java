@@ -16,19 +16,17 @@
 
 package org.springframework.http.server.rxnetty;
 
-import java.nio.ByteBuffer;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import org.reactivestreams.Publisher;
 import reactor.Publishers;
 import reactor.core.publisher.convert.RxJava1Converter;
-import reactor.io.buffer.Buffer;
 import rx.Observable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.Assert;
 
 /**
@@ -71,10 +69,10 @@ public class RxNettyServerHttpResponse implements ReactiveServerHttpResponse {
 	}
 
 	@Override
-	public Publisher<Void> setBody(Publisher<ByteBuffer> publisher) {
+	public Publisher<Void> setBody(Publisher<Bytes> publisher) {
 		applyHeaders();
 		Observable<byte[]> observable = RxJava1Converter.from(publisher).map(
-				content -> new Buffer(content).asBytes());
+				content -> content.asBytes());
 		return RxJava1Converter.from(this.response.writeBytes(observable));
 	}
 

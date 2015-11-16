@@ -18,19 +18,20 @@ package org.springframework.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
+
+import org.springframework.core.io.Bytes;
 
 /**
  * Simple {@link InputStream} implementation that exposes currently
- * available content of a {@link ByteBuffer}.
+ * available content of a {@link Bytes}.
  *
  * From Jackson <a href="https://github.com/FasterXML/jackson-databind/blob/master/src/main/java/com/fasterxml/jackson/databind/util/ByteBufferBackedInputStream.java">ByteBufferBackedInputStream</a>
  */
-public class ByteBufferInputStream extends InputStream {
+public class BytesInputStream extends InputStream {
 
-	protected final ByteBuffer b;
+	protected final Bytes b;
 
-	public ByteBufferInputStream(ByteBuffer buf) {
+	public BytesInputStream(Bytes buf) {
 		b = buf;
 	}
 

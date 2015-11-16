@@ -18,12 +18,13 @@ package org.springframework.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.Publishers;
+
+import org.springframework.core.io.Bytes;
 
 /**
  * {@code InputStream} implementation based on a byte array {@link Publisher}.
@@ -32,11 +33,11 @@ import reactor.Publishers;
  * @author Sebastien Deleuze
  * @author Stephane Maldini
  */
-public class ByteBufferPublisherInputStream extends InputStream {
+public class BytesPublisherInputStream extends InputStream {
 
-	private final BlockingQueue<ByteBuffer> queue;
+	private final BlockingQueue<Bytes> queue;
 
-	private ByteBufferInputStream currentStream;
+	private BytesInputStream currentStream;
 
 	private boolean completed;
 
@@ -46,7 +47,7 @@ public class ByteBufferPublisherInputStream extends InputStream {
 	 *
 	 * @param publisher the publisher to use
 	 */
-	public ByteBufferPublisherInputStream(Publisher<ByteBuffer> publisher) {
+	public BytesPublisherInputStream(Publisher<Bytes> publisher) {
 		this(publisher, 1);
 	}
 
@@ -57,7 +58,7 @@ public class ByteBufferPublisherInputStream extends InputStream {
 	 * @param requestSize the {@linkplain Subscription#request(long) request size} to use
 	 * on the publisher bound to Integer MAX
 	 */
-	public ByteBufferPublisherInputStream(Publisher<ByteBuffer> publisher, int requestSize) {
+	public BytesPublisherInputStream(Publisher<Bytes> publisher, int requestSize) {
 		Assert.notNull(publisher, "'publisher' must not be null");
 
 		this.queue = Publishers.toReadQueue(publisher, requestSize);
@@ -130,12 +131,12 @@ public class ByteBufferPublisherInputStream extends InputStream {
 			} else {
 				// take() blocks until next or complete() then return null,
 				// but that's OK since this is a *blocking* InputStream
-				ByteBuffer signal = this.queue.take();
+				Bytes signal = this.queue.take();
 				if(signal == null){
 					this.completed = true;
 					return null;
 				}
-				this.currentStream = new ByteBufferInputStream(signal);
+				this.currentStream = new BytesInputStream(signal);
 				return this.currentStream;
 			}
 		}

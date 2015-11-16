@@ -16,12 +16,12 @@
 
 package org.springframework.core.codec;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.reactivestreams.Publisher;
 
 import org.springframework.core.ResolvableType;
+import org.springframework.core.io.Bytes;
 import org.springframework.util.MimeType;
 
 /**
@@ -42,14 +42,14 @@ public interface Encoder<T> {
 	boolean canEncode(ResolvableType type, MimeType mimeType, Object... hints);
 
 	/**
-	 * Encode an input stream of {@code T} to an output {@link ByteBuffer} stream.
+	 * Encode an input stream of {@code T} to an output {@link Bytes} stream.
 	 * @param inputStream the input stream to process.
 	 * @param type the stream element type to process.
 	 * @param mimeType the mime type to process.
 	 * @param hints Additional information about how to do decode, optional.
 	 * @return the output stream
 	 */
-	Publisher<ByteBuffer> encode(Publisher<? extends T> inputStream, ResolvableType type,
+	Publisher<Bytes> encode(Publisher<? extends T> inputStream, ResolvableType type,
 			MimeType mimeType, Object... hints);
 
 	/**

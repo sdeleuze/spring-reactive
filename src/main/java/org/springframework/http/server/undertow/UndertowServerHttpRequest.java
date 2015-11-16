@@ -18,7 +18,6 @@ package org.springframework.http.server.undertow;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
@@ -27,6 +26,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.core.io.Bytes;
 
 /**
  * @author Marek Hawrylczak
@@ -36,12 +36,12 @@ class UndertowServerHttpRequest implements ReactiveServerHttpRequest {
 
 	private final HttpServerExchange exchange;
 
-	private final Publisher<ByteBuffer> body;
+	private final Publisher<Bytes> body;
 
 	private HttpHeaders headers;
 
 
-	public UndertowServerHttpRequest(HttpServerExchange exchange, Publisher<ByteBuffer> body) {
+	public UndertowServerHttpRequest(HttpServerExchange exchange, Publisher<Bytes> body) {
 		this.exchange = exchange;
 		this.body = body;
 	}
@@ -78,7 +78,7 @@ class UndertowServerHttpRequest implements ReactiveServerHttpRequest {
 	}
 
 	@Override
-	public Publisher<ByteBuffer> getBody() {
+	public Publisher<Bytes> getBody() {
 		return this.body;
 	}
 
