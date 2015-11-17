@@ -26,13 +26,13 @@ import org.reactivestreams.Publisher;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpRequest;
 
 /**
  * @author Marek Hawrylczak
  * @author Rossen Stoyanchev
  */
-class UndertowServerHttpRequest implements ReactiveServerHttpRequest {
+class UndertowServerHttpRequest implements ServerHttpRequest {
 
 	private final HttpServerExchange exchange;
 

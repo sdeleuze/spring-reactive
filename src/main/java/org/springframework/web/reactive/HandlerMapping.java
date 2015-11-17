@@ -16,13 +16,13 @@
 
 package org.springframework.web.reactive;
 
-import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpRequest;
 
 /**
  * @author Rossen Stoyanchev
  */
 public interface HandlerMapping {
 
-	Object getHandler(ReactiveServerHttpRequest request);
+	Object getHandler(ServerHttpRequest request);
 
 }

@@ -28,14 +28,14 @@ import rx.Observable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpRequest;
 import org.springframework.util.Assert;
 
 /**
  * @author Rossen Stoyanchev
  * @author Stephane Maldini
  */
-public class RxNettyServerHttpRequest implements ReactiveServerHttpRequest {
+public class RxNettyServerHttpRequest implements ServerHttpRequest {
 
 	private final HttpServerRequest<ByteBuf> request;
 

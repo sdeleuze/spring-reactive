@@ -14,28 +14,34 @@
  * limitations under the License.
  */
 
-package org.springframework.http;
+package org.springframework.http.reactive.client;
 
-import java.nio.ByteBuffer;
-
-import org.reactivestreams.Publisher;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.reactive.HttpInputMessage;
 
 /**
- * Represents a "reactive" HTTP input message, consisting of
- * {@linkplain #getHeaders() headers} and a readable
- * {@linkplain #getBody() streaming body }.
- *
- * <p>Typically implemented by an HTTP request on the server-side, or a response
- * on the client-side.
+ * Represents a "reactive" client-side HTTP response.
  *
  * @author Arjen Poutsma
  */
-public interface ReactiveHttpInputMessage extends HttpMessage {
+public interface ClientHttpResponse extends HttpInputMessage {
 
 	/**
-	 * Return the body of the message as an publisher of {@code ByteBuffer}s.
-	 * @return the body
+	 * Return the HTTP status code of the response.
+	 * @return the HTTP status as an {@link HttpStatus} enum value
 	 */
-	Publisher<ByteBuffer> getBody();
+	HttpStatus getStatusCode();
+
+	/**
+	 * Return the HTTP status code of the response as integer
+	 * @return the HTTP status as an integer
+	 */
+	int getRawStatusCode();
+
+	/**
+	 * Return the HTTP status text of the response.
+	 * @return the HTTP status text
+	 */
+	String getStatusText();
 
 }

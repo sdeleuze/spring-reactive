@@ -32,8 +32,8 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.MediaType;
-import org.springframework.http.server.ReactiveServerHttpRequest;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.reactive.codec.encoder.Encoder;
 import org.springframework.web.reactive.HandlerResult;
 import org.springframework.web.reactive.HandlerResultHandler;
@@ -106,8 +106,8 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Publisher<Void> handleResult(ReactiveServerHttpRequest request,
-			ReactiveServerHttpResponse response, HandlerResult result) {
+	public Publisher<Void> handleResult(ServerHttpRequest request,
+			ServerHttpResponse response, HandlerResult result) {
 
 		Object value = result.getValue();
 		if (value == null) {
@@ -172,7 +172,7 @@ public class ResponseBodyResultHandler implements HandlerResultHandler, Ordered 
 		return Publishers.error(new HttpMediaTypeNotAcceptableException(this.allSupportedMediaTypes));
 	}
 
-	private List<MediaType> getAcceptableMediaTypes(ReactiveServerHttpRequest request) {
+	private List<MediaType> getAcceptableMediaTypes(ServerHttpRequest request) {
 		List<MediaType> mediaTypes = request.getHeaders().getAccept();
 		return (mediaTypes.isEmpty() ? Collections.singletonList(MediaType.ALL) : mediaTypes);
 	}

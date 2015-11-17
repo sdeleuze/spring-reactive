@@ -28,14 +28,14 @@ import rx.Observable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.util.Assert;
 
 /**
  * @author Rossen Stoyanchev
  * @author Stephane Maldini
  */
-public class RxNettyServerHttpResponse implements ReactiveServerHttpResponse {
+public class RxNettyServerHttpResponse implements ServerHttpResponse {
 
 	private final HttpServerResponse<?> response;
 

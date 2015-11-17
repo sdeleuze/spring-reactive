@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.util.Assert;
 
 import io.undertow.server.HttpServerExchange;
@@ -34,7 +34,7 @@ import org.reactivestreams.Subscription;
  * @author Marek Hawrylczak
  * @author Rossen Stoyanchev
  */
-class UndertowServerHttpResponse implements ReactiveServerHttpResponse {
+class UndertowServerHttpResponse implements ServerHttpResponse {
 
 	private final HttpServerExchange exchange;
 

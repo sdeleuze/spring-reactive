@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.http.server;
+package org.springframework.http.reactive.server;
 
 import org.reactivestreams.Publisher;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ReactiveHttpOutputMessage;
+import org.springframework.http.reactive.HttpOutputMessage;
 
 /**
  * Represents a "reactive" server-side HTTP response.
  *
  * @author Arjen Poutsma
  */
-public interface ReactiveServerHttpResponse extends ReactiveHttpOutputMessage {
+public interface ServerHttpResponse extends HttpOutputMessage {
 
 	/**
 	 * Set the HTTP status code of the response.

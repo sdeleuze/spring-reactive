@@ -16,8 +16,8 @@
 
 package org.springframework.web.reactive.server.undertow;
 
-import org.springframework.http.server.ReactiveServerHttpRequest;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.web.reactive.HttpHandler;
 import org.springframework.util.Assert;
 
@@ -49,10 +49,10 @@ public class UndertowHttpHandlerAdapter implements io.undertow.server.HttpHandle
 	@Override
 	public void handleRequest(HttpServerExchange exchange) throws Exception {
 		RequestBodyPublisher requestPublisher = new RequestBodyPublisher(exchange);
-		ReactiveServerHttpRequest request = new UndertowServerHttpRequest(exchange, requestPublisher);
+		ServerHttpRequest request = new UndertowServerHttpRequest(exchange, requestPublisher);
 
 		ResponseBodySubscriber responseSubscriber = new ResponseBodySubscriber(exchange);
-		ReactiveServerHttpResponse response = new UndertowServerHttpResponse(exchange, responseSubscriber);
+		ServerHttpResponse response = new UndertowServerHttpResponse(exchange, responseSubscriber);
 
 		exchange.dispatch();
 

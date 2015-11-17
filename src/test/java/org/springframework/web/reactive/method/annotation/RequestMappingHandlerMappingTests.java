@@ -26,13 +26,12 @@ import org.reactivestreams.Publisher;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.support.StaticWebApplicationContext;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.reactive.method.annotation.RequestMappingHandlerMapping;
 
 import static org.junit.Assert.assertEquals;
 
@@ -54,14 +53,14 @@ public class RequestMappingHandlerMappingTests {
 
 	@Test
 	public void path() throws Exception {
-		ReactiveServerHttpRequest request = new MockServerHttpRequest(HttpMethod.GET, "boo");
+		ServerHttpRequest request = new MockServerHttpRequest(HttpMethod.GET, "boo");
 		HandlerMethod handler = (HandlerMethod) this.mapping.getHandler(request);
 		assertEquals(TestController.class.getMethod("boo"), handler.getMethod());
 	}
 
 	@Test
 	public void method() throws Exception {
-		ReactiveServerHttpRequest request = new MockServerHttpRequest(HttpMethod.POST, "foo");
+		ServerHttpRequest request = new MockServerHttpRequest(HttpMethod.POST, "foo");
 		HandlerMethod handler = (HandlerMethod) this.mapping.getHandler(request);
 		assertEquals(TestController.class.getMethod("postFoo"), handler.getMethod());
 
@@ -106,7 +105,7 @@ public class RequestMappingHandlerMappingTests {
 
 	}
 
-	private static class MockServerHttpRequest implements ReactiveServerHttpRequest{
+	private static class MockServerHttpRequest implements ServerHttpRequest{
 
 		private HttpMethod method;
 

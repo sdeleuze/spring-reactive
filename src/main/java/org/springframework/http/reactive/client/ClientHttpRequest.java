@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package org.springframework.http.client;
+package org.springframework.http.reactive.client;
 
 import org.springframework.http.HttpRequest;
-import org.springframework.http.ReactiveHttpOutputMessage;
+import org.springframework.http.reactive.HttpOutputMessage;
 
 /**
  * Represents a "reactive" client-side HTTP request.
  *
  * @author Arjen Poutsma
  */
-public interface ReactiveClientHttpRequest extends HttpRequest, ReactiveHttpOutputMessage {
+public interface ClientHttpRequest extends HttpRequest, HttpOutputMessage {
 
 }

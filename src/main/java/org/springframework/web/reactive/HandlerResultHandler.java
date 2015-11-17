@@ -18,8 +18,8 @@ package org.springframework.web.reactive;
 
 import org.reactivestreams.Publisher;
 
-import org.springframework.http.server.ReactiveServerHttpRequest;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 
 /**
  * Process the {@link HandlerResult}, usually returned by an {@link HandlerAdapter}.
@@ -48,7 +48,7 @@ public interface HandlerResultHandler {
 	 * when the handling is complete (success or error) including the flush of the data on the
 	 * network.
 	 */
-	Publisher<Void> handleResult(ReactiveServerHttpRequest request, ReactiveServerHttpResponse response,
+	Publisher<Void> handleResult(ServerHttpRequest request, ServerHttpResponse response,
 			HandlerResult result);
 
 }

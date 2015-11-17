@@ -27,8 +27,8 @@ import reactor.io.buffer.Buffer;
 import reactor.rx.Streams;
 
 import org.springframework.http.MediaType;
-import org.springframework.http.server.ReactiveServerHttpRequest;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.reactive.io.BufferOutputStream;
 import org.springframework.reactive.io.ByteBufferPublisherInputStream;
 import org.springframework.web.reactive.HttpHandler;
@@ -43,8 +43,8 @@ public class XmlHandler implements HttpHandler {
 	private static final Log logger = LogFactory.getLog(XmlHandler.class);
 
 	@Override
-	public Publisher<Void> handle(ReactiveServerHttpRequest request,
-			ReactiveServerHttpResponse response) {
+	public Publisher<Void> handle(ServerHttpRequest request,
+			ServerHttpResponse response) {
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(XmlHandlerIntegrationTests.Person.class);
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();

@@ -20,8 +20,8 @@ import org.reactivestreams.Publisher;
 import reactor.Publishers;
 
 import org.springframework.core.ResolvableType;
-import org.springframework.http.server.ReactiveServerHttpRequest;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.web.reactive.HandlerAdapter;
 import org.springframework.web.reactive.HandlerResult;
 import org.springframework.web.reactive.HttpHandler;
@@ -50,8 +50,8 @@ public class HttpHandlerAdapter implements HandlerAdapter {
 	}
 
 	@Override
-	public Publisher<HandlerResult> handle(ReactiveServerHttpRequest request,
-			ReactiveServerHttpResponse response, Object handler) {
+	public Publisher<HandlerResult> handle(ServerHttpRequest request,
+			ServerHttpResponse response, Object handler) {
 
 		HttpHandler httpHandler = (HttpHandler)handler;
 		Publisher<Void> completion = httpHandler.handle(request, response);

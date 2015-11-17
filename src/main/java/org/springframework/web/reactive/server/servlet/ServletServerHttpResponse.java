@@ -28,13 +28,13 @@ import reactor.Publishers;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.util.Assert;
 
 /**
  * @author Rossen Stoyanchev
  */
-public class ServletServerHttpResponse implements ReactiveServerHttpResponse {
+public class ServletServerHttpResponse implements ServerHttpResponse {
 
 	private final HttpServletResponse response;
 

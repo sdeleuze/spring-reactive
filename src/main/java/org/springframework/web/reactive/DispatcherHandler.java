@@ -31,8 +31,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.ReactiveServerHttpRequest;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 
 /**
  * Central dispatcher for HTTP request handlers/controllers. Dispatches to registered
@@ -92,7 +92,7 @@ public class DispatcherHandler implements HttpHandler, ApplicationContextAware {
 
 
 	@Override
-	public Publisher<Void> handle(ReactiveServerHttpRequest request, ReactiveServerHttpResponse response) {
+	public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Processing " + request.getMethod() + " request for [" + request.getURI() + "]");
 		}
@@ -123,7 +123,7 @@ public class DispatcherHandler implements HttpHandler, ApplicationContextAware {
 		});
 	}
 
-	protected Object getHandler(ReactiveServerHttpRequest request) {
+	protected Object getHandler(ServerHttpRequest request) {
 		Object handler = null;
 		for (HandlerMapping handlerMapping : this.handlerMappings) {
 			handler = handlerMapping.getHandler(request);

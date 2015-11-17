@@ -29,8 +29,8 @@ import reactor.rx.Streams;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.ReactiveServerHttpRequest;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.web.reactive.DispatcherHandler;
 import org.springframework.web.reactive.AbstractHttpHandlerIntegrationTests;
 import org.springframework.web.reactive.HttpHandler;
@@ -103,7 +103,7 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 	private static class FooHandler implements HttpHandler {
 
 		@Override
-		public Publisher<Void> handle(ReactiveServerHttpRequest request, ReactiveServerHttpResponse response) {
+		public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 			return response.setBody(Streams.just(Buffer.wrap("foo").byteBuffer()));
 		}
 	}
@@ -111,7 +111,7 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 	private static class BarHandler implements HttpHandler {
 
 		@Override
-		public Publisher<Void> handle(ReactiveServerHttpRequest request, ReactiveServerHttpResponse response) {
+		public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 			return response.setBody(Streams.just(Buffer.wrap("bar").byteBuffer()));
 		}
 	}

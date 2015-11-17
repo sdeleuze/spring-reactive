@@ -23,8 +23,8 @@ import reactor.Publishers;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.ResolvableType;
-import org.springframework.http.server.ReactiveServerHttpRequest;
-import org.springframework.http.server.ReactiveServerHttpResponse;
+import org.springframework.http.reactive.server.ServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpResponse;
 import org.springframework.web.reactive.HandlerResult;
 import org.springframework.web.reactive.HandlerResultHandler;
 
@@ -56,8 +56,8 @@ public class SimpleHandlerResultHandler implements Ordered, HandlerResultHandler
 	}
 
 	@Override
-	public Publisher<Void> handleResult(ReactiveServerHttpRequest request,
-			ReactiveServerHttpResponse response, HandlerResult result) {
+	public Publisher<Void> handleResult(ServerHttpRequest request,
+			ServerHttpResponse response, HandlerResult result) {
 
 		Publisher<Void> completion = Publishers.completable((Publisher<?>)result.getValue());
 		return Publishers.concat(Publishers.from(Arrays.asList(completion, response.writeHeaders())));

@@ -26,13 +26,13 @@ import reactor.io.net.http.HttpChannel;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpRequest;
 import org.springframework.util.Assert;
 
 /**
  * @author Stephane Maldini
  */
-public class PublisherReactorServerHttpRequest implements ReactiveServerHttpRequest {
+public class PublisherReactorServerHttpRequest implements ServerHttpRequest {
 
 	private final HttpChannel<Buffer, ?> channel;
 

@@ -19,7 +19,7 @@ package org.springframework.web.reactive.handler;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.http.server.ReactiveServerHttpRequest;
+import org.springframework.http.reactive.server.ServerHttpRequest;
 import org.springframework.web.reactive.HandlerMapping;
 
 /**
@@ -39,7 +39,7 @@ public class SimpleUrlHandlerMapping implements HandlerMapping {
 
 
 	@Override
-	public Object getHandler(ReactiveServerHttpRequest request) {
+	public Object getHandler(ServerHttpRequest request) {
 		return this.handlerMap.get(request.getURI().getPath());
 	}
 

@@ -14,32 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.http;
+package org.springframework.http.reactive;
 
 import java.nio.ByteBuffer;
 
 import org.reactivestreams.Publisher;
 
+import org.springframework.http.HttpMessage;
+
 /**
- * Represents a "reactive" HTTP output message, consisting of
- * {@linkplain #getHeaders() headers} and the capability to add a
- * {@linkplain #setBody(Publisher) body}.
+ * Represents a "reactive" HTTP input message, consisting of
+ * {@linkplain #getHeaders() headers} and a readable
+ * {@linkplain #getBody() streaming body }.
  *
- * <p>Typically implemented by an HTTP request on the client-side, or a response
- * on the server-side.
+ * <p>Typically implemented by an HTTP request on the server-side, or a response
+ * on the client-side.
  *
  * @author Arjen Poutsma
  */
-public interface ReactiveHttpOutputMessage extends HttpMessage {
+public interface HttpInputMessage extends HttpMessage {
 
 	/**
-	 * Sets the body of this message to the given publisher of {@link ByteBuffer}s.
-	 * The publisher will be used to write to the underlying HTTP layer with
-	 * asynchronously, given pull demand by this layer.
-	 *
-	 * @param body the body to use
-	 * @return a publisher that indicates completion
+	 * Return the body of the message as an publisher of {@code ByteBuffer}s.
+	 * @return the body
 	 */
-	Publisher<Void> setBody(Publisher<ByteBuffer> body);
+	Publisher<ByteBuffer> getBody();
 
 }
