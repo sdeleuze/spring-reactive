@@ -21,9 +21,11 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.fail;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
+import reactor.Publishers;
 import reactor.io.buffer.Buffer;
 import reactor.rx.Streams;
 
@@ -36,6 +38,7 @@ import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.DispatcherHandler;
 
@@ -91,6 +94,26 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 		assertArrayEquals("bar".getBytes(UTF_8), response.getBody());
 	}
 
+	@Test
+	public void testHandlerError() throws Exception {
+
+		RestTemplate restTemplate = new RestTemplate();
+
+		URI url = new URI("http://localhost:" + port + "/error");
+		RequestEntity<Void> request = RequestEntity.get(url).build();
+
+		ResponseEntity response = null;
+		try {
+			response = restTemplate.exchange(request, byte[].class);
+		}
+		catch (HttpServerErrorException ex) {
+			assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, ex.getStatusCode());
+		}
+		if (response != null) {
+			fail("Internal Server Error expected");
+		}
+	}
+
 	// TODO: remove @Ignore after 404 default handling
 
 	@Test
@@ -116,6 +139,7 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 			Map<String, Object> map = new HashMap<>();
 			map.put("/foo", new FooHandler());
 			map.put("/bar", new BarHandler());
+			map.put("/error", new ErrorHandler());
 			setHandlers(map);
 		}
 	}
@@ -133,6 +157,14 @@ public class SimpleUrlHandlerMappingIntegrationTests extends AbstractHttpHandler
 		@Override
 		public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 			return response.setBody(Streams.just(Buffer.wrap("bar").byteBuffer()));
+		}
+	}
+
+	private static class ErrorHandler implements HttpHandler {
+
+		@Override
+		public Publisher<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
+			return Publishers.error(new IllegalStateException());
 		}
 	}
 
