@@ -16,11 +16,8 @@
 
 package org.springframework.web.reactive.method.annotation;
 
-
-import java.util.Optional;
-
-import org.reactivestreams.Publisher;
-import reactor.Publishers;
+import reactor.Flux;
+import reactor.Mono;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -45,12 +42,12 @@ public class RequestParamArgumentResolver implements HandlerMethodArgumentResolv
 
 
 	@Override
-	public Publisher<Object> resolveArgument(MethodParameter param, ServerHttpRequest request) {
+	public Flux<Object> resolveArgument(MethodParameter param, ServerHttpRequest request) {
 		RequestParam annotation = param.getParameterAnnotation(RequestParam.class);
 		String name = (annotation.value().length() != 0 ? annotation.value() : param.getParameterName());
 		UriComponents uriComponents = UriComponentsBuilder.fromUri(request.getURI()).build();
 		String value = uriComponents.getQueryParams().getFirst(name);
-		return (value != null ? Publishers.just(value) : Publishers.empty());
+		return (value != null ? Flux.just(value) : Flux.empty());
 	}
 
 }

@@ -41,7 +41,7 @@ public class JsonObjectEncoderTests {
 			byte[] b = new byte[chunk.remaining()];
 			chunk.get(b);
 			return new String(b, StandardCharsets.UTF_8);
-		}).toList().await();
+		}).toList().get();
 		String result = String.join("", results);
 		assertEquals("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}", result);
 	}
@@ -56,7 +56,7 @@ public class JsonObjectEncoderTests {
 			byte[] b = new byte[chunk.remaining()];
 			chunk.get(b);
 			return new String(b, StandardCharsets.UTF_8);
-		}).toList().await();
+		}).toList().get();
 		String result = String.join("", results);
 		assertEquals("[{\"foo\": \"foofoo\", \"bar\": \"barbar\"},{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}]", result);
 	}
@@ -73,7 +73,7 @@ public class JsonObjectEncoderTests {
 			byte[] b = new byte[chunk.remaining()];
 			chunk.get(b);
 			return new String(b, StandardCharsets.UTF_8);
-		}).toList().await();
+		}).toList().get();
 		String result = String.join("", results);
 		assertEquals("[{\"foo\": \"foofoo\", \"bar\": \"barbar\"},{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"},{\"foo\": \"foofoofoofoo\", \"bar\": \"barbarbarbar\"}]", result);
 	}

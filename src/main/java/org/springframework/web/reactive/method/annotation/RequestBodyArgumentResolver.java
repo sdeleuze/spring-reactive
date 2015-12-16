@@ -20,7 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.reactivestreams.Publisher;
-import reactor.Publishers;
+import reactor.Flux;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
@@ -57,14 +57,14 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 	}
 
 	@Override
-	public Publisher<Object> resolveArgument(MethodParameter parameter, ServerHttpRequest request) {
+	public Flux<Object> resolveArgument(MethodParameter parameter, ServerHttpRequest request) {
 		MediaType mediaType = request.getHeaders().getContentType();
 		if (mediaType == null) {
 			mediaType = MediaType.APPLICATION_OCTET_STREAM;
 		}
 		ResolvableType type = ResolvableType.forMethodParameter(parameter);
-		Publisher<ByteBuffer> body = request.getBody();
-		Publisher<?> elementStream = body;
+		Flux<ByteBuffer> body = request.getBody();
+		Flux<?> elementStream = body;
 		ResolvableType elementType = type.hasGenerics() ? type.getGeneric(0) : type;
 
 		Decoder<?> decoder = resolveDecoder(elementType, mediaType);
@@ -73,10 +73,10 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 		}
 
 		if (this.conversionService.canConvert(Publisher.class, type.getRawClass())) {
-			return Publishers.just(this.conversionService.convert(elementStream, type.getRawClass()));
+			return Flux.just(this.conversionService.convert(elementStream, type.getRawClass()));
 		}
 
-		return Publishers.map(elementStream, element -> element);
+		return elementStream.map(a -> a);
 	}
 
 	private Decoder<?> resolveDecoder(ResolvableType type, MediaType mediaType, Object... hints) {

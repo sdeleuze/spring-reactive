@@ -50,7 +50,7 @@ public class JacksonJsonEncoderTests {
 			byte[] b = new byte[chunk.remaining()];
 			chunk.get(b);
 			return new String(b, StandardCharsets.UTF_8);
-		}).toList().await();
+		}).toList().get();
 		assertEquals(2, results.size());
 		assertEquals("{\"foo\":\"foofoo\",\"bar\":\"barbar\"}", results.get(0));
 		assertEquals("{\"foo\":\"foofoofoo\",\"bar\":\"barbarbar\"}", results.get(1));

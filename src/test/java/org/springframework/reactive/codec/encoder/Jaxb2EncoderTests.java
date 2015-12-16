@@ -51,7 +51,7 @@ public class Jaxb2EncoderTests {
 					byte[] b = new byte[chunk.remaining()];
 					chunk.get(b);
 					return new String(b, StandardCharsets.UTF_8);
-				}).toList().await();
+				}).toList().get();
 		assertEquals(2, results.size());
 		assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><pojo><bar>barbar</bar><foo>foofoo</foo></pojo>", results.get(0));
 		assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><pojo><bar>barbarbar</bar><foo>foofoofoo</foo></pojo>", results.get(1));

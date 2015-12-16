@@ -49,7 +49,7 @@ public class JacksonJsonDecoderTests {
 	public void decode() throws InterruptedException {
 		Stream<ByteBuffer> source = Streams.just(Buffer.wrap("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}").byteBuffer());
 		List<Object> results = Streams.wrap(decoder.decode(source, ResolvableType.forClass(Pojo.class), null))
-				.toList().await();
+				.toList().get();
 		assertEquals(1, results.size());
 		assertEquals("foofoo", ((Pojo) results.get(0)).getFoo());
 	}

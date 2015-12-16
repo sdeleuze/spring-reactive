@@ -50,7 +50,7 @@ public class StringEncoderTests {
 					byte[] b = new byte[chunk.remaining()];
 					chunk.get(b);
 					return new String(b, StandardCharsets.UTF_8);
-				}).toList().await();
+				}).toList().get();
 		assertEquals(1, results.size());
 		assertEquals("foo", results.get(0));
 	}

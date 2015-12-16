@@ -21,13 +21,13 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.reactivestreams.Publisher;
-import reactor.Publishers;
+import reactor.Flux;
+import reactor.Mono;
 import reactor.fn.tuple.Tuple;
 import reactor.rx.Streams;
 
@@ -48,7 +48,7 @@ import org.springframework.web.reactive.HandlerResult;
  */
 public class InvocableHandlerMethod extends HandlerMethod {
 
-	public static final Publisher<Object[]> NO_ARGS = Publishers.just(new Object[0]);
+	public static final Mono<Object[]> NO_ARGS = Mono.just(new Object[0]);
 
 	private final static Object NO_VALUE = new Object();
 
@@ -86,35 +86,34 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * @return Publisher that produces a single HandlerResult or an error signal;
 	 * never throws an exception.
 	 */
-	public Publisher<HandlerResult> invokeForRequest(ServerHttpRequest request, Object... providedArgs) {
+	public Mono<HandlerResult> invokeForRequest(ServerHttpRequest request, Object... providedArgs) {
 
-		Publisher<Object[]> argsPublisher = NO_ARGS;
+		Mono<Object[]> argsPublisher = NO_ARGS;
 		try {
 			if (!ObjectUtils.isEmpty(getMethodParameters())) {
 				List<Publisher<Object>> publishers = resolveArguments(request, providedArgs);
-				argsPublisher = Publishers.zip(publishers, this::initArgs);
-				argsPublisher = first(argsPublisher);
+				argsPublisher = Flux.zip(publishers, this::initArgs).next();
 			}
 		}
 		catch (Throwable ex) {
-			return Publishers.error(ex);
+			return Mono.error(ex);
 		}
 
-		return Publishers.concatMap(argsPublisher, args -> {
+		return Flux.from(argsPublisher).concatMap(args -> {
 			try {
 				Object value = doInvoke(args);
 				ResolvableType type =  ResolvableType.forMethodParameter(getReturnType());
 				HandlerResult handlerResult = new HandlerResult(this, value, type);
-				return Publishers.just(handlerResult);
+				return Mono.just(handlerResult);
 			}
 			catch (InvocationTargetException ex) {
-				return Publishers.error(ex.getTargetException());
+				return Mono.error(ex.getTargetException());
 			}
 			catch (Throwable ex) {
 				String s = getInvocationErrorMessage(args);
-				return Publishers.error(new IllegalStateException(s));
+				return Mono.error(new IllegalStateException(s));
 			}
-		});
+		}).next();
 	}
 
 	private List<Publisher<Object>> resolveArguments(ServerHttpRequest request, Object... providedArgs) {
@@ -125,7 +124,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 					if (!ObjectUtils.isEmpty(providedArgs)) {
 						for (Object providedArg : providedArgs) {
 							if (parameter.getParameterType().isInstance(providedArg)) {
-								return Publishers.just(providedArg);
+								return Flux.just(providedArg);
 							}
 						}
 					}
@@ -134,9 +133,8 @@ public class InvocableHandlerMethod extends HandlerMethod {
 							.findFirst()
 							.orElseThrow(() -> getArgError("No resolver for ", parameter, null));
 					try {
-						Publisher<Object> publisher = resolver.resolveArgument(parameter, request);
-						publisher = mapError(publisher, ex -> getArgError("Error resolving ", parameter, ex));
-						return Streams.wrap(publisher).defaultIfEmpty(NO_VALUE);
+						Flux<Object> publisher = resolver.resolveArgument(parameter, request).onErrorResumeWith(ex -> Flux.error(getArgError("Error resolving ", parameter, ex)));
+						return Streams.wrap(publisher).log().defaultIfEmpty(NO_VALUE);
 					}
 					catch (Exception ex) {
 						throw getArgError("Error resolving ", parameter, ex);
@@ -178,19 +176,6 @@ public class InvocableHandlerMethod extends HandlerMethod {
 
 	private Object[] initArgs(Tuple tuple) {
 		return Stream.of(tuple.toArray()).map(o -> o != NO_VALUE ? o : null).toArray();
-	}
-
-
-	private static <E> Publisher<E> first(Publisher<E> source) {
-		return Publishers.lift(source, (e, subscriber) -> {
-			subscriber.onNext(e);
-			subscriber.onComplete();
-		});
-	}
-
-	private static <E> Publisher<E> mapError(Publisher<E> source, Function<Throwable, Throwable> function) {
-		return Publishers.lift(source, null,
-				(throwable, subscriber) -> subscriber.onError(function.apply(throwable)), null);
 	}
 
 }

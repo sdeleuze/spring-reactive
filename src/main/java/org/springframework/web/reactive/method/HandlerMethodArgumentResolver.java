@@ -16,7 +16,7 @@
 
 package org.springframework.web.reactive.method;
 
-import org.reactivestreams.Publisher;
+import reactor.Flux;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -39,6 +39,6 @@ public interface HandlerMethodArgumentResolver {
 	 * resolve to any value which will result in passing {@code null} as the
 	 * argument value.
 	 */
-	Publisher<Object> resolveArgument(MethodParameter parameter, ServerHttpRequest request);
+	Flux<Object> resolveArgument(MethodParameter parameter, ServerHttpRequest request);
 
 }
