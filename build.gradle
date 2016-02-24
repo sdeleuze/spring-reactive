@@ -80,6 +80,7 @@ artifacts {
 dependencies {
 	compile "org.springframework:spring-core:${springVersion}"
 	compile "org.springframework:spring-web:${springVersion}"
+	compile "org.springframework:spring-messaging:${springVersion}"
 	compile "org.reactivestreams:reactive-streams:1.0.0"
 	compile "io.projectreactor:reactor-core:${reactorVersion}"
 	compile "commons-logging:commons-logging:1.2"
