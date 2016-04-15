@@ -18,8 +18,10 @@ package org.springframework.messaging.support;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
@@ -28,34 +30,35 @@ import org.springframework.messaging.SubscribableChannel;
 
 public class ReactiveMessageChannel implements SubscribableChannel {
 
-	private final List<MessageHandler> handlers = new ArrayList<>();
+	private final List<ReactiveMessageHandler> handlers = new ArrayList<>();
 
 
 	@Override
 	public boolean subscribe(MessageHandler handler) {
-		return this.handlers.add(handler);
+		if (!(handler instanceof ReactiveMessageHandler)) {
+			throw new RuntimeException("ReactiveMessageChannel supports only ReactiveMessageHandler");
+		}
+		return this.handlers.add((ReactiveMessageHandler)handler);
 	}
 
 	@Override
 	public boolean unsubscribe(MessageHandler handler) {
+		if (!(handler instanceof ReactiveMessageHandler)) {
+			throw new RuntimeException("ReactiveMessageChannel supports only ReactiveMessageHandler");
+		}
 		return this.handlers.remove(handler);
+	}
+
+	public void sendWith(Publisher<Message<?>> messageStream) {
+		//noinspection unchecked
+		ConnectableFlux<Message<?>> flux = (Flux.from(messageStream)).publish();
+		this.handlers.forEach(handler -> handler.handleMessageStream(flux));
+		flux.connect();
 	}
 
 	@Override
 	public boolean send(Message<?> message) {
-
-		Object payload = message.getPayload();
-		if (payload instanceof Flux) {
-			//noinspection unchecked
-			ConnectableFlux<Message<?>> flux = ((Flux<Message<?>>) payload).publish();
-			final Message<Flux<Message<?>>> wrapped = MessageBuilder.createMessage(flux, message.getHeaders());
-			this.handlers.forEach(handler -> handler.handleMessage(wrapped));
-			flux.connect();
-		}
-		else {
-			this.handlers.forEach(handler -> handler.handleMessage(message));
-		}
-
+		sendWith(Mono.just(message));
 		return true;
 	}
 

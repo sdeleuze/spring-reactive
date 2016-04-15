@@ -17,28 +17,31 @@ package org.springframework.web.socket.messaging;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.springframework.context.Lifecycle;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.ReactiveMessageChannel;
+import org.springframework.messaging.support.ReactiveMessageHandler;
 
-public class StompSubProtocolHandler implements MessageHandler, Lifecycle {
+public class StompSubProtocolHandler implements ReactiveMessageHandler, Lifecycle {
 
 	private final static Log logger = LogFactory.getLog(StompSubProtocolHandler.class);
 
 
-	private final SubscribableChannel clientInboundChannel;
+	private final ReactiveMessageChannel clientInboundChannel;
 
-	private final SubscribableChannel clientOutboundChannel;
+	private final ReactiveMessageChannel clientOutboundChannel;
 
 	private boolean started;
 
 
-	public StompSubProtocolHandler(SubscribableChannel clientInboundChannel,
-			SubscribableChannel clientOutboundChannel) {
+	public StompSubProtocolHandler(ReactiveMessageChannel clientInboundChannel,
+			ReactiveMessageChannel clientOutboundChannel) {
 
 		this.clientInboundChannel = clientInboundChannel;
 		this.clientOutboundChannel = clientOutboundChannel;
@@ -68,7 +71,7 @@ public class StompSubProtocolHandler implements MessageHandler, Lifecycle {
 
 	public void handleWebSocketMessages(String sessionId, Flux<String> webSocketFlux) {
 		Flux<Message<?>> messageFlux = webSocketFlux.map(message -> createMessage(message, sessionId));
-		this.clientInboundChannel.send(createMessage(messageFlux, sessionId));
+		this.clientInboundChannel.sendWith(messageFlux);
 	}
 
 	private Message<?> createMessage(Object payload, String sessionId) {
@@ -76,23 +79,21 @@ public class StompSubProtocolHandler implements MessageHandler, Lifecycle {
 	}
 
 	@Override
-	public void handleMessage(Message<?> messageFlux) {
-
-		// Pretend we're streaming messages to a WebSocket session
-
-		String id = (String) messageFlux.getHeaders().get("session-id");
-		Object payload = messageFlux.getPayload();
-		if (payload instanceof Flux) {
-			//noinspection unchecked
-			((Flux<Message<?>>) payload).consume(
-					message -> logger.debug("Message to \"" + id + "\" payload=" + message.getPayload()),
-					ex -> logger.error("Outbound WebSocket onError", ex),
-					() -> logger.debug("Outbound WebSocket onCompleted")
-			);
-		}
-		else {
-			logger.error("Unexpected message: " + messageFlux);
-		}
+	public void handleMessageStream(Publisher<Message<?>> messageStream) {
+		Flux.from(messageStream).consume(
+				message -> {
+					String id = (String) message.getHeaders().get("session-id");
+					logger.debug("Message to \"" + id + "\" payload=" + message.getPayload());
+				},
+				ex -> logger.error("Outbound WebSocket onError", ex),
+				() -> logger.debug("Outbound WebSocket onCompleted")
+		);
 	}
+
+	@Override
+	public void handleMessage(Message<?> message) {
+		handleMessageStream(Mono.just(message));
+	}
+
 
 }

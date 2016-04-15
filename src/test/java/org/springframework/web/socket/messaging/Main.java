@@ -22,7 +22,6 @@ import reactor.core.publisher.Flux;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.simp.annotation.support.SimpAnnotationMethodMessageHandler;
 import org.springframework.messaging.simp.broker.SimpleBrokerMessageHandler;
 import org.springframework.messaging.simp.user.UserDestinationMessageHandler;
@@ -59,17 +58,17 @@ public class Main {
 		}
 
 		@Bean
-		public SubscribableChannel clientInChannel() {
+		public ReactiveMessageChannel clientInChannel() {
 			return new ReactiveMessageChannel();
 		}
 
 		@Bean
-		public SubscribableChannel clientOutChannel() {
+		public ReactiveMessageChannel clientOutChannel() {
 			return new ReactiveMessageChannel();
 		}
 
 		@Bean
-		public SubscribableChannel brokerChannel() {
+		public ReactiveMessageChannel brokerChannel() {
 			return new ReactiveMessageChannel();
 		}
 

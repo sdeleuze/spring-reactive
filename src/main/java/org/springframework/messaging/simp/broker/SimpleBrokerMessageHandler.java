@@ -20,27 +20,29 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.subscriber.SignalEmitter;
 
 import org.springframework.context.Lifecycle;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.ReactiveMessageChannel;
+import org.springframework.messaging.support.ReactiveMessageHandler;
 
-
-public class SimpleBrokerMessageHandler implements MessageHandler, Lifecycle {
+public class SimpleBrokerMessageHandler implements ReactiveMessageHandler, Lifecycle {
 
 	private static Log logger = LogFactory.getLog(SimpleBrokerMessageHandler.class);
 
 
-	private final SubscribableChannel brokerChannel;
+	private final ReactiveMessageChannel brokerChannel;
 
-	private final SubscribableChannel clientInChannel;
+	private final ReactiveMessageChannel clientInChannel;
 
-	private final SubscribableChannel clientOutChannel;
+	private final ReactiveMessageChannel clientOutChannel;
 
 	private boolean started;
 
@@ -48,8 +50,8 @@ public class SimpleBrokerMessageHandler implements MessageHandler, Lifecycle {
 	private final Map<String, SignalEmitter<Message<?>>> emitters = new ConcurrentHashMap<>();
 
 
-	public SimpleBrokerMessageHandler(SubscribableChannel brokerChannel,
-			SubscribableChannel clientInChannel, SubscribableChannel clientOutChannel) {
+	public SimpleBrokerMessageHandler(ReactiveMessageChannel brokerChannel,
+			ReactiveMessageChannel clientInChannel, ReactiveMessageChannel clientOutChannel) {
 
 		this.brokerChannel = brokerChannel;
 		this.clientInChannel = clientInChannel;
@@ -81,34 +83,29 @@ public class SimpleBrokerMessageHandler implements MessageHandler, Lifecycle {
 	}
 
 	@Override
-	public void handleMessage(Message<?> message) {
-
-		Object payload = message.getPayload();
-		if (payload instanceof Flux) {
+	public void handleMessageStream(Publisher<Message<?>> messageStream) {
+		Flux.from(messageStream).consume(message -> {
 
 			// 1. Create SignalEmitter for outbound client messages
-
 			String id = (String) message.getHeaders().get("session-id");
 			if (id != null && !this.emitters.containsKey(id)) {
 				logger.debug("Adding emitter for session \"" + id + "\"");
 				EmitterProcessor<Message<?>> processor = EmitterProcessor.create();
 				SignalEmitter<Message<?>> emitter = processor.connectEmitter();
 				this.emitters.put(id, emitter);
-				this.clientOutChannel.send(createMessage(processor, id));
+				this.clientOutChannel.sendWith(processor);
 			}
 
 			// 2. For now broadcast every message
+			broadcastMessage(message);
+		},
+		ex -> logger.error("Simple broker onError", ex),
+		() -> logger.debug("Simple broker onCompleted"));
+	}
 
-			//noinspection unchecked
-			((Flux<Message<?>>) payload).consume(
-					this::broadcastMessage,
-					ex -> logger.error("Simple broker onError", ex),
-					() -> logger.debug("Simple broker onCompleted")
-			);
-		}
-		else {
-			logger.error("Unexpected message: " + message);
-		}
+	@Override
+	public void handleMessage(Message<?> message) {
+		handleMessageStream(Mono.just(message));
 	}
 
 	private void broadcastMessage(Message<?> message) {

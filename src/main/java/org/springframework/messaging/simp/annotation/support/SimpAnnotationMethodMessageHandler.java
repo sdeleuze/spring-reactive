@@ -18,15 +18,16 @@ package org.springframework.messaging.simp.annotation.support;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.springframework.context.Lifecycle;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.SubscribableChannel;
+import org.springframework.messaging.support.ReactiveMessageHandler;
 
-
-public class SimpAnnotationMethodMessageHandler implements MessageHandler, Lifecycle {
+public class SimpAnnotationMethodMessageHandler implements ReactiveMessageHandler, Lifecycle {
 
 	private static Log logger = LogFactory.getLog(SimpAnnotationMethodMessageHandler.class);
 
@@ -63,20 +64,20 @@ public class SimpAnnotationMethodMessageHandler implements MessageHandler, Lifec
 	}
 
 	@Override
-	public void handleMessage(Message<?> messageFlux) {
-		String id = (String) messageFlux.getHeaders().get("session-id");
-		Object payload = messageFlux.getPayload();
-		if (payload instanceof Flux) {
-			//noinspection unchecked
-			((Flux<Message<?>>) payload).consume(
-					message -> logger.debug("Message from \"" + id + "\" payload=" + message.getPayload()),
-					ex -> logger.error("onError", ex),
-					() -> logger.debug("onCompleted")
-			);
-		}
-		else {
-			logger.error("Unexpected message: " + messageFlux);
-		}
+	public void handleMessageStream(Publisher<Message<?>> messageStream) {
+		Flux.from(messageStream).consume(
+				message -> {
+					String id = (String) message.getHeaders().get("session-id");
+					logger.debug("Message from \"" + id + "\" payload=" + message.getPayload());
+				},
+				ex -> logger.error("onError", ex),
+				() -> logger.debug("onCompleted")
+		);
+	}
+
+	@Override
+	public void handleMessage(Message<?> message) {
+		handleMessageStream(Mono.just(message));
 	}
 
 }

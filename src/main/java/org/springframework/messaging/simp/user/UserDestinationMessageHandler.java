@@ -17,16 +17,17 @@ package org.springframework.messaging.simp.user;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.springframework.context.Lifecycle;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.ReactiveMessageHandler;
 
-
-public class UserDestinationMessageHandler implements MessageHandler, Lifecycle {
+public class UserDestinationMessageHandler implements ReactiveMessageHandler, Lifecycle {
 
 	private final static Log logger = LogFactory.getLog(UserDestinationMessageHandler.class);
 
@@ -68,26 +69,23 @@ public class UserDestinationMessageHandler implements MessageHandler, Lifecycle 
 	}
 
 	@Override
+	public void handleMessageStream(Publisher<Message<?>> messageStream) {
+		Flux.from(messageStream)
+				.filter(message -> (((String) message.getPayload()).startsWith("user-")))
+				.map(message -> {
+					String from = (String) message.getPayload();
+					String to = from.replaceAll("^user", (String) message.getHeaders().get("session-id"));
+					logger.debug("Transformed \"" + from + "\" to \"" + to + "\"");
+					return MessageBuilder.createMessage(to, message.getHeaders());
+				})
+				.consume(message -> this.brokerChannel.send(message),
+						ex -> logger.error("Simple broker onError", ex),
+						() -> logger.debug("Simple broker onCompleted"));
+	}
+
+	@Override
 	public void handleMessage(Message<?> message) {
-
-		// In the real implementation we'd check and transform the "destination" header...
-
-		Object payload = message.getPayload();
-		if (payload instanceof Flux) {
-			//noinspection unchecked
-			Flux<Message<String>> userMessages = ((Flux<Message<?>>) payload)
-					.filter(m -> (((String) m.getPayload()).startsWith("user-")))
-					.map(m -> {
-						String from = (String) m.getPayload();
-						String to = from.replaceAll("^user", (String) message.getHeaders().get("session-id"));
-						logger.debug("Transformed \"" + from + "\" to \"" + to + "\"");
-						return MessageBuilder.createMessage(to, message.getHeaders());
-					});
-			this.brokerChannel.send(MessageBuilder.createMessage(userMessages, message.getHeaders()));
-		}
-		else {
-			logger.error("Unexpected message: " + message);
-		}
+		handleMessageStream(Mono.just(message));
 	}
 
 }
