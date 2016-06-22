@@ -56,7 +56,7 @@ public class ResourceHttpMessageConverter extends CodecHttpMessageConverter<Reso
 	@Override
 	public Mono<Void> write(Publisher<? extends Resource> inputStream,
 			ResolvableType type, MediaType contentType,
-			ReactiveHttpOutputMessage outputMessage) {
+			ReactiveHttpOutputMessage outputMessage, Object... hints) {
 		return Mono.from(Flux.from(inputStream).
 				take(1).
 				concatMap(resource -> {
@@ -85,7 +85,7 @@ public class ResourceHttpMessageConverter extends CodecHttpMessageConverter<Reso
 	}
 
 	private Mono<Void> writeContent(Resource resource, ResolvableType type,
-			MediaType contentType, ReactiveHttpOutputMessage outputMessage) {
+			MediaType contentType, ReactiveHttpOutputMessage outputMessage, Object... hints) {
 		if (outputMessage instanceof ZeroCopyHttpOutputMessage) {
 			Optional<File> file = getFile(resource);
 			if (file.isPresent()) {
@@ -99,7 +99,7 @@ public class ResourceHttpMessageConverter extends CodecHttpMessageConverter<Reso
 
 		// non-zero copy fallback, using ResourceEncoder
 		return super.write(Mono.just(resource), type,
-				outputMessage.getHeaders().getContentType(), outputMessage);
+				outputMessage.getHeaders().getContentType(), outputMessage, hints);
 	}
 
 	private static Optional<Long> contentLength(Resource resource) {

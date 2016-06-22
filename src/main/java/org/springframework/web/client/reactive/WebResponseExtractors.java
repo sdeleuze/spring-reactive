@@ -25,6 +25,7 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.core.codec.Decoder;
+import org.springframework.core.codec.hint.StreamableHint;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,8 @@ public class WebResponseExtractors {
 
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 
-	private static final Object[] HINTS = new Object[] {UTF_8};
+	// TODO Use streamable hint only when needed
+	private static final Object[] HINTS = new Object[] {UTF_8, StreamableHint.STREAMABLE};
 
 	private static final Object EMPTY_BODY = new Object();
 

@@ -30,7 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -44,7 +43,6 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.annotation.SynthesizingMethodParameter;
 import org.springframework.core.codec.Decoder;
 import org.springframework.core.codec.support.JacksonJsonDecoder;
-import org.springframework.core.codec.support.JsonObjectDecoder;
 import org.springframework.core.codec.support.StringDecoder;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.core.convert.support.ReactiveStreamsToCompletableFutureConverter;
@@ -93,7 +91,7 @@ public class RequestBodyArgumentResolverTests {
 
 	@Before
 	public void setUp() throws Exception {
-		this.resolver = resolver(new JacksonJsonDecoder(new JsonObjectDecoder()));
+		this.resolver = resolver(new JacksonJsonDecoder());
 		this.request = new MockServerHttpRequest(HttpMethod.GET, new URI("/path"));
 		MockServerHttpResponse response = new MockServerHttpResponse();
 		DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
@@ -170,10 +168,7 @@ public class RequestBodyArgumentResolverTests {
 		assertEquals(map, resolveValue("map", Map.class, body));
 	}
 
-	// TODO: @Ignore
-
 	@Test
-	@Ignore
 	public void list() throws Exception {
 		String body = "[{\"bar\":\"b1\",\"foo\":\"f1\"},{\"bar\":\"b2\",\"foo\":\"f2\"}]";
 		assertEquals(Arrays.asList(new TestBean("f1", "b1"), new TestBean("f2", "b2")),
@@ -181,7 +176,6 @@ public class RequestBodyArgumentResolverTests {
 	}
 
 	@Test
-	@Ignore
 	public void array() throws Exception {
 		String body = "[{\"bar\":\"b1\",\"foo\":\"f1\"},{\"bar\":\"b2\",\"foo\":\"f2\"}]";
 		assertArrayEquals(new TestBean[] {new TestBean("f1", "b1"), new TestBean("f2", "b2")},

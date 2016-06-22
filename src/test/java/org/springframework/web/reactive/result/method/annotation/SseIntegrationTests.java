@@ -69,7 +69,7 @@ public class SseIntegrationTests extends AbstractHttpHandlerIntegrationTests {
 		this.webClient.setMessageDecoders(Arrays.asList(
 				new ByteBufferDecoder(),
 				new StringDecoder(false),
-				new JacksonJsonDecoder(new JsonObjectDecoder())));
+				new JacksonJsonDecoder()));
 	}
 
 	@Override

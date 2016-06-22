@@ -28,6 +28,8 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
 import org.springframework.core.ResolvableType;
+import org.springframework.core.codec.hint.HintUtils;
+import org.springframework.core.codec.hint.StreamableHint;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.support.DataBufferUtils;
@@ -36,6 +38,9 @@ import org.springframework.util.MimeType;
 /**
  * Decode an arbitrary split byte stream representing JSON objects to a byte
  * stream where each chunk is a well-formed JSON object.
+ *
+ * <p>Hints: {@code true} for enabling streaming json arrays (each json array element is emitted
+ * in the returned {@link Flux}, {@code false} to handle json arrays as one object (default)</p>
  *
  * This class does not do any real parsing or validation. A sequence of byte
  * is considered a JSON object/array if it contains a matching number of opening
@@ -57,44 +62,30 @@ public class JsonObjectDecoder extends AbstractDecoder<DataBuffer> {
 
 	private final int maxObjectLength;
 
-	private final boolean streamArrayElements;
-
 	public JsonObjectDecoder() {
 		// 1 MB
 		this(1024 * 1024);
 	}
 
-	public JsonObjectDecoder(int maxObjectLength) {
-		this(maxObjectLength, true);
-	}
-
-	public JsonObjectDecoder(boolean streamArrayElements) {
-		this(1024 * 1024, streamArrayElements);
-	}
-
-
 	/**
 	 * @param maxObjectLength maximum number of bytes a JSON object/array may
 	 * use (including braces and all). Objects exceeding this length are dropped
 	 * and an {@link IllegalStateException} is thrown.
-	 * @param streamArrayElements if set to true and the "top level" JSON object
-	 * is an array, each of its entries is passed through the pipeline individually
-	 * and immediately after it was fully received, allowing for arrays with
 	 */
-	public JsonObjectDecoder(int maxObjectLength,
-			boolean streamArrayElements) {
+	public JsonObjectDecoder(int maxObjectLength) {
 		super(new MimeType("application", "json", StandardCharsets.UTF_8),
 				new MimeType("application", "*+json", StandardCharsets.UTF_8));
 		if (maxObjectLength < 1) {
 			throw new IllegalArgumentException("maxObjectLength must be a positive int");
 		}
 		this.maxObjectLength = maxObjectLength;
-		this.streamArrayElements = streamArrayElements;
 	}
 
 	@Override
 	public Flux<DataBuffer> decode(Publisher<DataBuffer> inputStream, ResolvableType elementType,
 			MimeType mimeType, Object... hints) {
+
+		final boolean streamArrayElements = HintUtils.hasHint(hints, StreamableHint.STREAMABLE);
 
 		return Flux.from(inputStream)
 				.flatMap(new Function<DataBuffer, Publisher<? extends DataBuffer>>() {

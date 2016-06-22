@@ -23,11 +23,13 @@ import java.util.stream.Collectors;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import rx.Observable;
 
 import org.springframework.core.Conventions;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.codec.hint.StreamableHint;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.reactive.HttpMessageConverter;
@@ -123,6 +125,7 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 		ResolvableType type = ResolvableType.forMethodParameter(parameter);
 		boolean isAsyncType = isAsyncType(type);
 		ResolvableType elementType = (isAsyncType ? type.getGeneric(0) : type);
+		StreamableHint streamableHint = (isStreamableType(type) ? StreamableHint.STREAMABLE : StreamableHint.SCALAR);
 
 		MediaType mediaType = exchange.getRequest().getHeaders().getContentType();
 		if (mediaType == null) {
@@ -130,8 +133,8 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 		}
 
 		for (HttpMessageConverter<?> converter : getMessageConverters()) {
-			if (converter.canRead(elementType, mediaType)) {
-				Flux<?> elementFlux = converter.read(elementType, exchange.getRequest());
+			if (converter.canRead(elementType, mediaType, streamableHint)) {
+				Flux<?> elementFlux = converter.read(elementType, exchange.getRequest(), streamableHint);
 
 				if (this.validator != null) {
 					elementFlux= applyValidationIfApplicable(elementFlux, parameter);
@@ -158,6 +161,12 @@ public class RequestBodyArgumentResolver implements HandlerMethodArgumentResolve
 	private boolean isAsyncType(ResolvableType type) {
 		return (Mono.class.equals(type.getRawClass()) || Flux.class.equals(type.getRawClass()) ||
 				getConversionService().canConvert(Publisher.class, type.getRawClass()));
+	}
+
+	private boolean isStreamableType(ResolvableType type) {
+		// TODO Avoid hardcoding types like Observable, should be handled by the GenericConverter or something along these lines
+		Class<?> clazz = type.getRawClass();
+		return (Flux.class.isAssignableFrom(clazz) || Observable.class.isAssignableFrom(clazz) || (Publisher.class.isAssignableFrom(clazz) && !Mono.class.isAssignableFrom(clazz)));
 	}
 
 	protected Flux<?> applyValidationIfApplicable(Flux<?> elementFlux, MethodParameter methodParam) {

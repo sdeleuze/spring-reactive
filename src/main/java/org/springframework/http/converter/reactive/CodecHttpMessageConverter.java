@@ -93,12 +93,12 @@ public class CodecHttpMessageConverter<T> implements HttpMessageConverter<T> {
 
 
 	@Override
-	public boolean canRead(ResolvableType type, MediaType mediaType) {
-		return this.decoder != null && this.decoder.canDecode(type, mediaType);
+	public boolean canRead(ResolvableType type, MediaType mediaType, Object... hints) {
+		return this.decoder != null && this.decoder.canDecode(type, mediaType, hints);
 	}
 
 	@Override
-	public boolean canWrite(ResolvableType type, MediaType mediaType) {
+	public boolean canWrite(ResolvableType type, MediaType mediaType, Object... hints) {
 		return this.encoder != null && this.encoder.canEncode(type, mediaType);
 	}
 
@@ -114,7 +114,7 @@ public class CodecHttpMessageConverter<T> implements HttpMessageConverter<T> {
 
 
 	@Override
-	public Flux<T> read(ResolvableType type, ReactiveHttpInputMessage inputMessage) {
+	public Flux<T> read(ResolvableType type, ReactiveHttpInputMessage inputMessage, Object... hints) {
 		if (this.decoder == null) {
 			return Flux.error(new IllegalStateException("No decoder set"));
 		}
@@ -122,13 +122,12 @@ public class CodecHttpMessageConverter<T> implements HttpMessageConverter<T> {
 		if (contentType == null) {
 			contentType = MediaType.APPLICATION_OCTET_STREAM;
 		}
-		return this.decoder.decode(inputMessage.getBody(), type, contentType);
+		return this.decoder.decode(inputMessage.getBody(), type, contentType, hints);
 	}
 
 	@Override
 	public Mono<Void> write(Publisher<? extends T> inputStream, ResolvableType type,
-			MediaType contentType, ReactiveHttpOutputMessage outputMessage) {
-
+			MediaType contentType, ReactiveHttpOutputMessage outputMessage, Object... hints) {
 		if (this.encoder == null) {
 			return Mono.error(new IllegalStateException("No decoder set"));
 		}

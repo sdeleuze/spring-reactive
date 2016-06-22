@@ -22,6 +22,7 @@ import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.test.TestSubscriber;
 
+import org.springframework.core.codec.hint.StreamableHint;
 import org.springframework.core.io.buffer.AbstractDataBufferAllocatingTestCase;
 import org.springframework.core.io.buffer.DataBuffer;
 
@@ -61,7 +62,7 @@ public class JsonObjectDecoderTests extends AbstractDataBufferAllocatingTestCase
 		Flux<DataBuffer> source = Flux.just(stringBuffer(
 				"[{\"foo\": \"foofoo\", \"bar\": \"barbar\"},{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}]"));
 		Flux<String> output =
-				decoder.decode(source, null, null).map(JsonObjectDecoderTests::toString);
+				decoder.decode(source, null, null, StreamableHint.STREAMABLE).map(JsonObjectDecoderTests::toString);
 		TestSubscriber
 				.subscribe(output)
 				.assertValues("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}",
@@ -75,7 +76,7 @@ public class JsonObjectDecoderTests extends AbstractDataBufferAllocatingTestCase
 				Flux.just(stringBuffer("[{\"foo\": \"foofoo\", \"bar\""), stringBuffer(
 						": \"barbar\"},{\"foo\": \"foofoofoo\", \"bar\": \"barbarbar\"}]"));
 		Flux<String> output =
-				decoder.decode(source, null, null).map(JsonObjectDecoderTests::toString);
+				decoder.decode(source, null, null, StreamableHint.STREAMABLE).map(JsonObjectDecoderTests::toString);
 		TestSubscriber
 				.subscribe(output)
 				.assertValues("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}",

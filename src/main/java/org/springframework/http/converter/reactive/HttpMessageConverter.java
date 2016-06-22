@@ -39,9 +39,10 @@ public interface HttpMessageConverter<T> {
 	 * @param type the type to test for readability
 	 * @param mediaType the media type to read, can be {@code null} if not specified.
 	 * Typically the value of a {@code Content-Type} header.
+	 * @param hints additional information about how to do read, optional
 	 * @return {@code true} if readable; {@code false} otherwise
 	 */
-	boolean canRead(ResolvableType type, MediaType mediaType);
+	boolean canRead(ResolvableType type, MediaType mediaType, Object... hints);
 
 	/**
 	 * Return the list of {@link MediaType} objects that can be read by this converter.
@@ -56,18 +57,20 @@ public interface HttpMessageConverter<T> {
 	 * {@link #canRead canRead} method of this interface, which must have returned {@code
 	 * true}.
 	 * @param inputMessage the HTTP input message to read from
+	 * @param hints additional information about how to do read, optional
 	 * @return the converted object
 	 */
-	Flux<T> read(ResolvableType type, ReactiveHttpInputMessage inputMessage);
+	Flux<T> read(ResolvableType type, ReactiveHttpInputMessage inputMessage, Object... hints);
 
 	/**
 	 * Indicates whether the given class can be written by this converter.
 	 * @param type the class to test for writability
 	 * @param mediaType the media type to write, can be {@code null} if not specified.
 	 * Typically the value of an {@code Accept} header.
+	 * @param hints additional information about how to do write, optional
 	 * @return {@code true} if writable; {@code false} otherwise
 	 */
-	boolean canWrite(ResolvableType type, MediaType mediaType);
+	boolean canWrite(ResolvableType type, MediaType mediaType, Object... hints);
 
 	/**
 	 * Return the list of {@link MediaType} objects that can be written by this
@@ -82,10 +85,11 @@ public interface HttpMessageConverter<T> {
 	 * @param type the stream element type to process.
 	 * @param contentType the content type to use when writing. May be {@code null} to
 	 * indicate that the default content type of the converter must be used.
+	 * @param hints additional information about how to do write, optional
 	 * @param outputMessage the message to write to
 	 * @return
 	 */
 	Mono<Void> write(Publisher<? extends T> inputStream,
 			ResolvableType type, MediaType contentType,
-			ReactiveHttpOutputMessage outputMessage);
+			ReactiveHttpOutputMessage outputMessage, Object... hints);
 }

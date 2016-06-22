@@ -248,8 +248,7 @@ public class WebReactiveConfiguration implements ApplicationContextAware {
 			converters.add(converter(new Jaxb2Encoder(), new Jaxb2Decoder()));
 		}
 		if (jackson2Present) {
-			JsonObjectDecoder objectDecoder = new JsonObjectDecoder();
-			converters.add(converter(new JacksonJsonEncoder(), new JacksonJsonDecoder(objectDecoder)));
+			converters.add(converter(new JacksonJsonEncoder(), new JacksonJsonDecoder()));
 		}
 	}
 
